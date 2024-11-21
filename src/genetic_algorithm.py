@@ -1,4 +1,6 @@
 import json
+import numpy as np
+
 class GeneticAlgorithm:
     '''
     Parameters:
@@ -117,7 +119,6 @@ class GeneticAlgorithm:
     def run(self):
         # initialization
         pop = self.__pop_init(method=self.pop_init, pop_size=self.pop_size)
-        return pop
         '''
         # parent selection
         p1, p2 = self.parent_selection(method=self.selection, population=pop)
@@ -147,5 +148,27 @@ class GeneticAlgorithm:
         return pop_init_methods[method](pop_size)
 
     def __random_pop_init(self, pop_size):
+        tasks = 10
+        robots = 3
+
+        # uses two-part chromosome representation
+        chromosome = self.__create_two_part_chromosome(tasks, robots)
         return 0
 
+    def __create_two_part_chromosome(self, tasks, robots):
+        # part 1: random permutation of tasks
+        chromo1 = np.random.permutation(tasks) + 1
+        chromo2 = [0] * robots
+        
+        # part 2: random amount of tasks
+        tasks_left, robots_left = tasks, robots
+        for i in range(robots-1):
+            tasks_assigned = np.random.randint(1, tasks_left-robots_left+2)
+            tasks_left = tasks_left - tasks_assigned 
+            robots_left -= 1
+            chromo2[i] = tasks_assigned 
+        chromo2[robots-1] = tasks_left 
+
+        chromosome = np.concatenate((chromo1, chromo2)) 
+
+        return chromosome
