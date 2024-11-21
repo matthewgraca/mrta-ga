@@ -2,6 +2,18 @@ import unittest
 from src.genetic_algorithm import GeneticAlgorithm
 
 class GeneticAlgorithmTest(unittest.TestCase):
-    def test_1(self):
+    '''
+        Test initialization, parameters
+    '''
+    def test_init(self):
         ga = GeneticAlgorithm()
-        self.assertTrue(ga.test() == 0)
+        actual = ga.get_parameters()
+        expected = {
+            'pop_size' : 100,
+            'crossover' : 'pmx',
+            'mutation' : 'inverse',
+            'pc' : 0.4,
+            'pm' : 0.6
+        }
+        self.assertEqual(actual, expected)
+
