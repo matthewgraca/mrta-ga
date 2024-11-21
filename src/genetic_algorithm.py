@@ -16,7 +16,7 @@ class GeneticAlgorithm:
             pop_size=100, 
             pop_init='random',
             selection='sus',
-            crossover='pmx', 
+            crossover='tcx', 
             mutation='inverse', 
             pc=0.4, 
             pm=0.6,
@@ -29,6 +29,7 @@ class GeneticAlgorithm:
             replacement
         )
 
+        # initialize
         self.pop_size = pop_size
         self.pop_init = pop_init
         self.selection = selection
@@ -51,7 +52,7 @@ class GeneticAlgorithm:
         valid_params = {
             'pop_init'      : {'random'},
             'selection'     : {'sus'},
-            'crossover'     : {'pmx'},
+            'crossover'     : {'tcx'},
             'mutation'      : {'inverse'},
             'replacement'   : {'none'}
         }
