@@ -1,3 +1,4 @@
+import json
 class GeneticAlgorithm:
     '''
     Parameters:
@@ -60,3 +61,15 @@ class GeneticAlgorithm:
             'pc' : self.pc,
             'pm' : self.pm
         }
+
+    '''
+    Accesses the list of tasks from a json file
+    Format -- tasks: [id, release_time, [x1, y1, x2, y2]]
+
+    Params:
+        path: path of the file
+    '''
+    def access_tasks(path='maps/task_list.json'):
+        with open(path, 'r') as file:
+            tasks = json.load(file)
+
