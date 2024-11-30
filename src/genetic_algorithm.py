@@ -137,23 +137,27 @@ class GeneticAlgorithm:
     Params:
         method: The method being used to initialize
         pop_size: The size of the population
+        tasks: The number of tasks to finish
+        robots: The number of robots
 
     Returns:
         The population of candidate solutions
     '''
-    def __pop_init(self, method, pop_size):
+    def __pop_init(self, method, pop_size, tasks, robots):
+        # list of current population initialization methods
         pop_init_methods = {
             'random' : self.__random_pop_init
         }
-        return pop_init_methods[method](pop_size)
+        return pop_init_methods[method](pop_size, tasks, robots)
 
-    def __random_pop_init(self, pop_size):
-        tasks = 10
-        robots = 3
+    def __random_pop_init(self, pop_size, tasks, robots):
+        pop = []
+        for i in range(pop_size):
+            # uses two-part chromosome representation
+            chromosome = self.__create_two_part_chromosome(tasks, robots)
+            pop.append(chromosome)
 
-        # uses two-part chromosome representation
-        chromosome = self.__create_two_part_chromosome(tasks, robots)
-        return 0
+        return pop 
 
     def __create_two_part_chromosome(self, tasks, robots):
         # part 1: random permutation of tasks
@@ -172,3 +176,6 @@ class GeneticAlgorithm:
         chromosome = np.concatenate((chromo1, chromo2)) 
 
         return chromosome
+
+    def __two_part_crossover(self, p1, p2):
+        return c1, c2

@@ -74,3 +74,12 @@ class PopInitTest(unittest.TestCase):
                 total_sum += actual[j]
 
             self.assertTrue(total_sum == m)
+
+    def test_pop_init(self):
+        np.random.seed(0)
+        ga = GeneticAlgorithm()
+
+        size = 500
+        tasks, robots = 10, 3
+        actual = ga._GeneticAlgorithm__pop_init('random', size, tasks, robots)
+        self.assertTrue(len(actual) == size)
