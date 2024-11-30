@@ -178,4 +178,5 @@ class GeneticAlgorithm:
         return chromosome
 
     def __two_part_crossover(self, p1, p2):
+        c1, c2 = np.array([0]), np.array([0])
         return c1, c2
