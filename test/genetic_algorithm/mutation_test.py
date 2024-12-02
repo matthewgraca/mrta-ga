@@ -23,6 +23,17 @@ class MutationTest(unittest.TestCase):
             # check second part sums to tasks
             total_sum = 0
             for j in range(n+m-1, m-1, -1):
-                total_sum += actual1[j]
+                total_sum += actual[j]
 
             self.assertTrue(total_sum == m)
+
+            # check if a subtour was actually inverted
+            inverted = False 
+            segments = ga._GeneticAlgorithm__get_subtour_start_indices_of(chromo, m, n)
+            for i in range(n):
+                # get subtour slice
+                subtour_reversed = chromo[segments[i]:chromo[m+i]][::-1]
+                subtour_actual = actual[segments[i]:chromo[m+i]]
+                if np.array_equal(subtour_reversed, subtour_actual):
+                    inverted = True
+            self.assertTrue(inverted)

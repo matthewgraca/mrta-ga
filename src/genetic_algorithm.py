@@ -442,5 +442,15 @@ class GeneticAlgorithm:
         The mutated chromosome
     '''
     def __inverse_mutation(self, chromosome, tasks, robots):
+        # pick a random agent's subtour
+        agent = np.random.randint(0, robots)
+        startIdxes = self.__get_subtour_start_indices_of(chromosome, tasks, robots)
+
+        # get their indices
+        startIdx = startIdxes[agent]
+        endIdx = startIdx + chromosome[tasks + agent]
+
         # invert the subtour of that agent
-        return np.array([0, 0])
+        inverted_subtour = chromosome[startIdx : endIdx][::-1]
+        chromosome[startIdx : endIdx] = inverted_subtour
+        return chromosome 
