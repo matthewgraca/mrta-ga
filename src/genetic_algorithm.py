@@ -120,16 +120,17 @@ class GeneticAlgorithm:
     def run(self):
         tasks, robots = 9, 3
         # initialization
-        pop = self.__pop_init(self.pop_init, self.pop_size, tasks, robots)
+        pop = self.__pop_init(self.pop_size, tasks, robots)
         '''
         # parent selection
         p1, p2 = self.parent_selection(method=self.selection, population=pop)
         '''
         # crossover
         c1, c2 = self.__crossover(p1, p2, tasks, robots)
-        '''
         # mutation
-        c1, c2 = self.mutation(method=self.mutation, c1=c1, c2=c2)
+        c1 = self.mutation(c1, tasks, robots)
+        c2 = self.mutation(c2, tasks, robots)
+        '''
         # replacement
         pop = self.replacement(method=self.replacement, pop=pop, c1=c1, c2=c2)
         # termination
@@ -330,3 +331,36 @@ class GeneticAlgorithm:
         c1 = self.__tcx_create_child(p1, p2, tasks, robots)
         c2 = self.__tcx_create_child(p2, p1, tasks, robots)
         return np.array(c1), np.array(c2)
+
+    '''
+    Wrapper function for mutation 
+
+    Params:
+        chromosome: The chromosome that will be mutated
+        tasks: The number of tasks to finish
+        robots: The number of robots
+
+    Returns:
+        The mutated chromosome
+    '''
+    def __mutation(self, chromosome, tasks, robots):
+        method = self.mutation
+        # list of current crossover methods
+        mut_methods= {
+            'inverse': self.__inverse_mutation
+        }
+        return mut_methods[method](chromosome, tasks, robots)
+
+    '''
+    Performs inverse mutation on the given chromosome
+
+    Params:
+        chromosome: The chromosome that will be mutated
+        tasks: The number of tasks to finish
+        robots: The number of robots
+
+    Returns:
+        The mutated chromosome
+    '''
+    def __inverse_mutation(self, chromosome, tasks, robots):
+        return np.array([0, 0])
