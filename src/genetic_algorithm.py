@@ -1,5 +1,6 @@
 import json
 import numpy as np
+from collections import deque
 
 class GeneticAlgorithm:
     '''
@@ -177,6 +178,109 @@ class GeneticAlgorithm:
 
         return chromosome
 
-    def __two_part_crossover(self, p1, p2):
-        c1, c2 = np.array([0]), np.array([0])
-        return c1, c2
+    '''
+    Helper function that serves as the implementation for TCX. Produces one 
+        child at a time.
+
+    Params:
+        p1: The first parent
+        p2: The second parent
+        tasks: The number of tasks
+        robots: The number of robots 
+
+    Returns:
+        A child, based on p1, using TCX
+    '''
+    def __tcx_create_child(self, p1, p2, tasks, robots):
+        # save start index of each tour
+        segment_idx = [0]
+        for i in range(robots - 1):
+            assigned_tasks = p1[tasks + i]
+            segment_idx.append(segment_idx[i] + assigned_tasks)
+
+        # select gene segment for each agent
+        saved_genes = []
+        saved_tour_sizes = []
+        for m in range(robots):
+            # get each segment range
+            assigned_tasks = p1[tasks + m]
+            start = segment_idx[m]
+            end = start + assigned_tasks
+
+            # pick subtour w/in the segment range
+            lo = np.random.randint(start, end)
+            hi = np.random.randint(lo, end)
+            saved_tour_sizes.append(hi + 1 - lo)
+
+            # save
+            for i in range(lo, hi+1):
+                saved_genes.append(p1[i])
+
+        # find and sort gene positions of genes not in the segment wrt p2
+        unsaved_genes = []
+        for i in range(tasks):
+            if p1[i] not in saved_genes:
+                unsaved_genes.append(p1[i])
+        sorted_unsaved_genes = []
+        temp = []
+        for gene in unsaved_genes:
+            temp.append((np.where(p2 == gene)[0][0], gene))
+        for i, gene in sorted(temp):
+            sorted_unsaved_genes.append(gene)
+        unsaved_genes = sorted_unsaved_genes
+
+        # determine the unsaved genes that will attach to the saved genes 
+        unsaved_tour_sizes = []
+        genes_remaining = len(sorted_unsaved_genes)
+        for m in range(robots):
+            # if the end is reached, add the rest
+            num_genes = 0
+            if m == robots - 1 or genes_remaining == 0:
+                num_genes = genes_remaining
+            else:
+                num_genes = np.random.randint(1, genes_remaining + 1)
+            genes_remaining -= num_genes
+            unsaved_tour_sizes.append(num_genes)
+
+        # combine genes to create child
+        c1_tasks, c2_tasks = [], []
+        c1_robots, c2_robots = [], []
+        p1_start, p1_end = 0, 0
+        p2_start, p2_end = 0, 0
+        for p1_tour, p2_tour in zip(saved_tour_sizes, unsaved_tour_sizes):
+            temp = []
+            # parent 1 segment
+            p1_start = p1_end
+            p1_end = p1_start + p1_tour 
+            segment = saved_genes[p1_start:p1_end]
+            temp.extend(segment)
+
+            # parent 2 segment
+            p2_start = p2_end
+            p2_end = p2_start + p2_tour
+            segment = unsaved_genes[p2_start:p2_end]
+            temp.extend(segment)
+
+            # combine segments
+            c1_tasks.extend(temp)
+            c1_robots.append(p1_tour + p2_tour)
+
+        c1 = c1_tasks + c1_robots
+        return c1
+
+    '''
+    Performs TCX to create two children.
+
+    Params:
+        p1: The first parent
+        p2: The second parent
+        tasks: The number of tasks
+        robots: The number of robots
+
+    Returns:
+        The two offspring as a result of TCX
+    '''
+    def __two_part_crossover(self, p1, p2, tasks, robots):
+        c1 = self.__tcx_create_child(p1, p2, tasks, robots)
+        c2 = self.__tcx_create_child(p2, p1, tasks, robots)
+        return np.array(c1), np.array(c2)
