@@ -240,17 +240,78 @@ class GeneticAlgorithm:
     '''
     def __tcx_create_child(self, p1, p2, tasks, robots):
         # save start index of each tour
-        segment_idx = [0]
-        for i in range(robots - 1):
-            assigned_tasks = p1[tasks + i]
-            segment_idx.append(segment_idx[i] + assigned_tasks)
+        segment_idx = self.__get_subtour_start_indices_of(p1, tasks, robots)
 
         # select gene segment for each agent
+        saved_genes, saved_tour_sizes = self.__tcx_select_gene_segments(
+            p1, tasks, robots, segment_idx
+        )
+
+        # find and sort gene positions of genes not in the segment wrt p2
+        unsaved_genes, unsaved_tour_sizes = self.__tcx_find_and_sort_unsaved_genes(
+            p1, p2, saved_genes, tasks, robots
+        )
+
+        # combine genes to create child
+        c1 = self.__tcx_combine_genes(
+            saved_genes, saved_tour_sizes, unsaved_genes, unsaved_tour_sizes
+        )
+
+        return c1
+
+    '''
+    Performs TCX to create two children.
+
+    Params:
+        p1: The first parent
+        p2: The second parent
+        tasks: The number of tasks
+        robots: The number of robots
+
+    Returns:
+        A pair of offspring, as a result of TCX
+    '''
+    def __two_part_crossover(self, p1, p2, tasks, robots):
+        c1 = self.__tcx_create_child(p1, p2, tasks, robots)
+        c2 = self.__tcx_create_child(p2, p1, tasks, robots)
+        return np.array(c1), np.array(c2)
+
+    '''
+    Helper function that finds the start index of every robot's subtour
+
+    Params:
+        chromosome: The chromosome containing the candidate solution
+        tasks: The number of tasks
+        robots: The number of robots
+
+    Returns:
+        A list of the start index of each robot's subtour
+    '''
+    def __get_subtour_start_indices_of(self, chromosome, tasks, robots):
+        segment_idx = [0]
+        for i in range(robots - 1):
+            assigned_tasks = chromosome[tasks + i]
+            segment_idx.append(segment_idx[i] + assigned_tasks)
+        return segment_idx
+
+    '''
+    Helper function that selects the segments of each subtour for each robot
+
+    Params:
+        chromosome: The chromosome containing the candidate solution
+        tasks: The number of tasks
+        robots: The number of robots
+        segment_idx: The start indices of each robot's subtour
+
+    Returns:
+        A list containing the saved genes and a list containing their tour size
+    '''
+    def __tcx_select_gene_segments(self, chromosome, tasks, robots, segment_idx):
         saved_genes = []
         saved_tour_sizes = []
         for m in range(robots):
             # get each segment range
-            assigned_tasks = p1[tasks + m]
+            assigned_tasks = chromosome[tasks + m]
             start = segment_idx[m]
             end = start + assigned_tasks
 
@@ -261,17 +322,38 @@ class GeneticAlgorithm:
 
             # save
             for i in range(lo, hi+1):
-                saved_genes.append(p1[i])
+                saved_genes.append(chromosome[i])
 
-        # find and sort gene positions of genes not in the segment wrt p2
+        return saved_genes, saved_tour_sizes
+
+    '''
+    Helper function that finds the unsaved genes of p1 in p2, and sorts them 
+        w.r.t. their positions in p2.
+
+    Params:
+        p1: The first parent
+        p2: The second parent
+        saved_genes: The gene segments that have been saved from p1
+        tasks: The number of tasks
+        robots: The number of robots
+
+    Returns:
+        A list containing the sorted, unsaved genes wrt p2, and a list 
+            containing their tour size
+    '''
+    def __tcx_find_and_sort_unsaved_genes(self, p1, p2, saved_genes, tasks, robots):
         unsaved_genes = []
+        # collect all unsaved genes
         for i in range(tasks):
             if p1[i] not in saved_genes:
                 unsaved_genes.append(p1[i])
+
         sorted_unsaved_genes = []
         temp = []
+        # find where the unsaved genes are in p2
         for gene in unsaved_genes:
             temp.append((np.where(p2 == gene)[0][0], gene))
+        # sort unsaved genes base on their location in p2
         for i, gene in sorted(temp):
             sorted_unsaved_genes.append(gene)
         unsaved_genes = sorted_unsaved_genes
@@ -289,9 +371,23 @@ class GeneticAlgorithm:
             genes_remaining -= num_genes
             unsaved_tour_sizes.append(num_genes)
 
-        # combine genes to create child
-        c1_tasks, c2_tasks = [], []
-        c1_robots, c2_robots = [], []
+        return unsaved_genes, unsaved_tour_sizes
+
+    '''
+    Helper function that combines the selected genes from p1 with the 
+        unselected genes of p1 w.r.t. p2 to create the child. 
+
+    Params:
+        saved_genes: The saved genes of the first parent
+        saved_tour_sizes: The size of each tour of each robot
+        unsaved_genes: The unsaved genes of the first parent w.r.t. the second
+        unsaved_tour_sizes: The size of each tour of each robot
+
+    Returns:
+        The child of the first and second parent.
+    '''
+    def __tcx_combine_genes(self, saved_genes, saved_tour_sizes, unsaved_genes, unsaved_tour_sizes): 
+        c1_tasks, c1_robots = [], []
         p1_start, p1_end = 0, 0
         p2_start, p2_end = 0, 0
         for p1_tour, p2_tour in zip(saved_tour_sizes, unsaved_tour_sizes):
@@ -312,25 +408,7 @@ class GeneticAlgorithm:
             c1_tasks.extend(temp)
             c1_robots.append(p1_tour + p2_tour)
 
-        c1 = c1_tasks + c1_robots
-        return c1
-
-    '''
-    Performs TCX to create two children.
-
-    Params:
-        p1: The first parent
-        p2: The second parent
-        tasks: The number of tasks
-        robots: The number of robots
-
-    Returns:
-        A pair of offspring, as a result of TCX
-    '''
-    def __two_part_crossover(self, p1, p2, tasks, robots):
-        c1 = self.__tcx_create_child(p1, p2, tasks, robots)
-        c2 = self.__tcx_create_child(p2, p1, tasks, robots)
-        return np.array(c1), np.array(c2)
+        return c1_tasks + c1_robots
 
     '''
     Wrapper function for mutation 
@@ -352,7 +430,8 @@ class GeneticAlgorithm:
         return mut_methods[method](chromosome, tasks, robots)
 
     '''
-    Performs inverse mutation on the given chromosome
+    Performs inverse mutation on the given chromosome. A random subtour is 
+        picked, then inverted.
 
     Params:
         chromosome: The chromosome that will be mutated
@@ -363,4 +442,5 @@ class GeneticAlgorithm:
         The mutated chromosome
     '''
     def __inverse_mutation(self, chromosome, tasks, robots):
+        # invert the subtour of that agent
         return np.array([0, 0])
