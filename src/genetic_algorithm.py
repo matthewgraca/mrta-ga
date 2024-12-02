@@ -8,7 +8,7 @@ class GeneticAlgorithm:
         pop_size: Population size, default 100
         pop_init: Population initialization method, default random
         selection: Selection method, default stochastic universal sampling
-        crossover: Crossover method, default partially mapped crossover (pmx)
+        crossover: Crossover method, default two part crossover (tcx)
         mutation: Mutation method, default inverse mutation
         pc: Probability of crossover, default 0.4
         pm: Probability of mutation, default 0.6
@@ -126,7 +126,7 @@ class GeneticAlgorithm:
         p1, p2 = self.parent_selection(method=self.selection, population=pop)
         '''
         # crossover
-        c1, c2 = self.crossover(self.crossover, p1, p2, tasks, robots)
+        c1, c2 = self.__crossover(p1, p2, tasks, robots)
         '''
         # mutation
         c1, c2 = self.mutation(method=self.mutation, c1=c1, c2=c2)
@@ -215,7 +215,8 @@ class GeneticAlgorithm:
     Returns:
         A pair of offspring, as a result of whatever crossover method was given
     '''
-    def __crossover(self, method, p1, p2, tasks, robots):
+    def __crossover(self, p1, p2, tasks, robots):
+        method = self.crossover
         # list of current crossover methods
         xover_methods= {
             'tcx' : self.__two_part_crossover
