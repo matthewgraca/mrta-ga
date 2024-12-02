@@ -118,13 +118,16 @@ class GeneticAlgorithm:
     Runs the genetic algorithm with the defined parameters
     '''
     def run(self):
+        tasks, robots = 9, 3
         # initialization
-        pop = self.__pop_init(method=self.pop_init, pop_size=self.pop_size)
+        pop = self.__pop_init(self.pop_init, self.pop_size, tasks, robots)
         '''
         # parent selection
         p1, p2 = self.parent_selection(method=self.selection, population=pop)
+        '''
         # crossover
-        c1, c2 = self.crossover(method=self.crossover, p1=p1, p2=p2)
+        c1, c2 = self.crossover(self.crossover, p1, p2, tasks, robots)
+        '''
         # mutation
         c1, c2 = self.mutation(method=self.mutation, c1=c1, c2=c2)
         # replacement
@@ -133,7 +136,7 @@ class GeneticAlgorithm:
         '''
 
     '''
-    Initializes the population of candidate solutions
+    Wrapper function for initializing population
 
     Params:
         method: The method being used to initialize
@@ -142,7 +145,7 @@ class GeneticAlgorithm:
         robots: The number of robots
 
     Returns:
-        The population of candidate solutions
+        The population of candidate solutions, as a result of the given method
     '''
     def __pop_init(self, method, pop_size, tasks, robots):
         # list of current population initialization methods
@@ -200,6 +203,25 @@ class GeneticAlgorithm:
         chromosome = np.concatenate((chromo1, chromo2)) 
 
         return chromosome
+
+    '''Wrapper function for crossover
+
+    Params:
+        p1: The first parent
+        p2: The second parent
+        tasks: The number of tasks
+        robots: The number of robots
+
+    Returns:
+        A pair of offspring, as a result of whatever crossover method was given
+    '''
+    def __crossover(self, method, p1, p2, tasks, robots):
+        # list of current crossover methods
+        xover_methods= {
+            'tcx' : self.__two_part_crossover
+        }
+        return xover_methods[method](p1, p2, tasks, robots)
+
 
     '''
     Helper function that serves as the implementation for TCX. Produces one 
