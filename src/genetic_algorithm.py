@@ -151,6 +151,17 @@ class GeneticAlgorithm:
         }
         return pop_init_methods[method](pop_size, tasks, robots)
 
+    '''
+    Implements randomized population initialization.
+
+    Params:
+        pop_size: The size of the population
+        tasks: The number of tasks
+        robots: The number of robots
+
+    Returns:
+        The population, randomly generated based on the given tasks and robots.
+    '''
     def __random_pop_init(self, pop_size, tasks, robots):
         pop = []
         for i in range(pop_size):
@@ -160,6 +171,18 @@ class GeneticAlgorithm:
 
         return pop 
 
+    '''
+    Implements the candidate solutions. Design is a two-part chromosome, where 
+        the first part contains the tours of each robot, while the second 
+        part contains the size of the tour taken by each robot.
+
+    Params:
+        tasks: The number of tasks to complete
+        robots: The number of robots in the fleet
+
+    Returns:
+        The chromosome encoding of the candidate solution.
+    '''
     def __create_two_part_chromosome(self, tasks, robots):
         # part 1: random permutation of tasks
         chromo1 = np.random.permutation(tasks) + 1
@@ -278,7 +301,7 @@ class GeneticAlgorithm:
         robots: The number of robots
 
     Returns:
-        The two offspring as a result of TCX
+        A pair of offspring, as a result of TCX
     '''
     def __two_part_crossover(self, p1, p2, tasks, robots):
         c1 = self.__tcx_create_child(p1, p2, tasks, robots)
