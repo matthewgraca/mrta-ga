@@ -5,13 +5,12 @@ from src.genetic_algorithm import GeneticAlgorithm
 class PopInitTest(unittest.TestCase):
     def test_two_part_chromosome_10_3(self):
         np.random.seed(0)
-        ga = GeneticAlgorithm()
+        ga = GeneticAlgorithm(pop_init='random')
 
         # run 100 times for robust measure on stochastic method
         m, n = 10, 3
         for _ in range(100):
             actual = ga._GeneticAlgorithm__create_two_part_chromosome(m, n)
-            actual.tolist()
 
             # check first part is a permutation of tasks
             track = set()
@@ -35,7 +34,6 @@ class PopInitTest(unittest.TestCase):
         m, n = 100, 13
         for _ in range(100):
             actual = ga._GeneticAlgorithm__create_two_part_chromosome(m, n)
-            actual.tolist()
 
             # check first part is a permutation of tasks
             track = set()
@@ -53,13 +51,12 @@ class PopInitTest(unittest.TestCase):
 
     def test_two_part_chromosome_1000_50(self):
         np.random.seed(0)
-        ga = GeneticAlgorithm()
+        ga = GeneticAlgorithm(pop_init='random')
 
         # run 100 times for robust measure on stochastic method
         m, n = 1000, 50
         for _ in range(100):
             actual = ga._GeneticAlgorithm__create_two_part_chromosome(m, n)
-            actual.tolist()
 
             # check first part is a permutation of tasks
             track = set()
@@ -77,9 +74,9 @@ class PopInitTest(unittest.TestCase):
 
     def test_pop_init(self):
         np.random.seed(0)
-        ga = GeneticAlgorithm()
+        ga = GeneticAlgorithm(pop_init='random')
 
         size = 500
         tasks, robots = 10, 3
-        actual = ga._GeneticAlgorithm__pop_init('random', size, tasks, robots)
+        actual = ga._GeneticAlgorithm__pop_init(size, tasks, robots)
         self.assertTrue(len(actual) == size)

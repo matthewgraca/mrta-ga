@@ -139,7 +139,6 @@ class GeneticAlgorithm:
     Wrapper function for initializing population
 
     Params:
-        method: The method being used to initialize
         pop_size: The size of the population
         tasks: The number of tasks to finish
         robots: The number of robots
@@ -147,7 +146,8 @@ class GeneticAlgorithm:
     Returns:
         The population of candidate solutions, as a result of the given method
     '''
-    def __pop_init(self, method, pop_size, tasks, robots):
+    def __pop_init(self, pop_size, tasks, robots):
+        method = self.pop_init
         # list of current population initialization methods
         pop_init_methods = {
             'random' : self.__random_pop_init
