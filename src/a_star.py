@@ -90,25 +90,22 @@ class AStar:
         The path taken to reach the destination
     '''
     def trace_path(self, cell_details, dest):
-        print("The Path is ")
         path = []
-        row, col = dest[0], dest[1]
+        row, col = dest
+        cell = cell_details[row][col]
 
         # Trace the path from destination to source using parent cells
-        while not (cell_details[row][col].i == row and cell_details[row][col].j == col):
+        while not (cell.i == row and cell.j == col):
             path.append((row, col))
-            temp_row = cell_details[row][col].i
-            temp_col = cell_details[row][col].j
-            row = temp_row
-            col = temp_col
+            temp_row, temp_col = cell.i, cell.j
+            row, col = temp_row, temp_col
+            cell = cell_details[row][col]
 
         # Add the source cell to the path
         path.append((row, col))
 
-        # Print the path in reverse to get source -> destination
-        for i in reversed(path):
-            print("->", i, end=" ")
-        print()
+        # return the path in reverse to get source -> destination
+        return list(reversed(path))
 
     '''
     Performs A* search
@@ -119,20 +116,25 @@ class AStar:
         dest: The locatin of the destination cell
 
     Returns:
-        None
+        List containing the path from src to dest. If no such path exists, 
+            an empty list is returned.
     '''
     def a_star_search(self, grid, src, dest):
-        # run initial validity check for src and dest
-        print(dest)
-        self.__initial_validity_check(grid, src, dest)
+        # run initial validity check for src and dest coordinates
+        if not self.__initial_validity_check(grid, src, dest):
+            return []
 
-        # Initialize the closed list (visited cells)
-        closed_list = [[False for _ in range(self.max_col)] for _ in range(self.max_row)]
+        # initialize list of visited cells
+        closed_list = [
+            [False for _ in range(self.max_col)] for _ in range(self.max_row)
+        ]
 
         # embed each cell with a node containing details
-        cell_details = [[Node() for _ in range(self.max_col)] for _ in range(self.max_row)]
+        cell_details = [
+            [Node() for _ in range(self.max_col)] for _ in range(self.max_row)
+        ]
 
-        # Initialize the start cell details
+        # Initialize the source cell's details
         curr_x, curr_y = src
         cell = cell_details[curr_x][curr_y]
         cell.f = cell.g = cell.h = 0
@@ -142,49 +144,44 @@ class AStar:
         open_list = []
         heapq.heappush(open_list, (0.0, curr_x, curr_y))
 
-        # Initialize the flag for whether destination is found
-        found_dest = False
-
         # Main loop of A* search algorithm
         while open_list:
             # Pop the cell with the smallest f value from the open list
             p = heapq.heappop(open_list)
 
             # Mark the cell as visited
+            # p = (dist from src, x, y)
             _, curr_x, curr_y = p
             closed_list[curr_x][curr_y] = True
 
             # For each direction, check the successors
-            directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-            for direction in directions:
-                next_x = curr_x + direction[0]
-                next_y = curr_y + direction[1]
+            neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+            for r, c in neighbors:
+                next_x = curr_x + r
+                next_y = curr_y + c
 
-                # If the successor is valid, unblocked, and not visited
+                # If the successor is valid, unblocked, and not yet visited
                 if (
                     self.is_valid(next_x, next_y) and 
                     self.is_unblocked(grid, next_x, next_y) and 
                     not closed_list[next_x][next_y]
                 ):
-                    # If the successor is the destination
+                    # if destination is found
                     if self.is_destination(next_x, next_y, dest):
                         # Set the parent of the destination cell
                         cell_details[next_x][next_y].i = curr_x 
                         cell_details[next_x][next_y].j = curr_y
-                        print("The destination cell is found")
 
-                        # Trace and print the path from source to destination
-                        self.trace_path(cell_details, dest)
-                        found_dest = True
-
-                        return
+                        # return the path from source to destination
+                        return self.trace_path(cell_details, dest)
                     else:
                         # Calculate the new f, g, and h values
                         g_new = cell_details[curr_x][curr_y].g + 1.0
                         h_new = self.heuristic_func(dest, next_x, next_y)
                         f_new = g_new + h_new
 
-                        # If the cell is not in the open list or the new f value is smaller
+                        # If the cell is not in the open list 
+                        #   or the new f value is smaller
                         new_cell = cell_details[next_x][next_y]
                         if new_cell.f == float('inf') or new_cell.f > f_new:
                             # Add the cell to the open list
@@ -196,9 +193,8 @@ class AStar:
                             new_cell.i = curr_x
                             new_cell.j = curr_y
 
-        # If the destination is not found after visiting all cells
-        if not found_dest:
-            print("Failed to find the destination cell")
+        # return empty path if the destination hasn't been found
+        return []
 
     '''
     Performs initial validity check:
@@ -212,7 +208,7 @@ class AStar:
         dest: The destination cell
 
     Returns:
-        None
+        True if the checks are passed, false if otherwise. 
     '''
     def __initial_validity_check(self, grid, src, dest):
         src_x, src_y = src
@@ -223,18 +219,21 @@ class AStar:
             not self.is_valid(src_x, src_y) or 
             not self.is_valid(dest_x, dest_y)
         ):
-            raise ValueError("Source or destination is invalid")
+            return False
+            #raise ValueError("Source or destination is invalid")
 
         # Check if the source and destination are unblocked
         if (
             not self.is_unblocked(grid, src_x, src_y) or 
             not self.is_unblocked(grid, dest_x, dest_y)
         ):
-            raise ValueError("Source or the destination is blocked")
+            return False
+            #raise ValueError("Source or the destination is blocked")
 
         # Check if we are already at the destination
         if self.is_destination(src_x, src_y, dest):
-            raise ValueError("We are already at the destination")
+            return False
+            #raise ValueError("We are already at the destination")
 
-        return 
+        return True 
 

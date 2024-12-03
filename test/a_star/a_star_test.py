@@ -22,15 +22,23 @@ class AStarTest(unittest.TestCase):
         grid = np.zeros((40, 60)).tolist()
         a_star = AStar(grid)
 
+        # open
         self.assertTrue(a_star.is_valid(3, 4))
+
+        # open
         self.assertTrue(a_star.is_valid(0, 0))
+
+        # row out of bound
         self.assertFalse(a_star.is_valid(-1, 4))
+
+        # col out of bound
         self.assertFalse(a_star.is_valid(1, -1))
+
+        # row and col out of bound
         self.assertFalse(a_star.is_valid(-1, -1))
         self.assertFalse(a_star.is_valid(40, 60))
 
     def test_search_1(self):
-        # Define the grid ('.' for unblocked, '@' for blocked)
         grid = [
             ['.', '@', '.', '.', '.', '.', '@', '.', '.', '.'],
             ['.', '.', '.', '@', '.', '.', '.', '@', '.', '.'],
@@ -43,10 +51,81 @@ class AStarTest(unittest.TestCase):
             ['.', '.', '.', '@', '@', '@', '.', '@', '@', '.']
         ]
 
-        # Define the source and destination
         src = [8, 0]
         dest = [0, 0]
 
-        # Run the A* search algorithm
         a_star = AStar(grid)
-        a_star.a_star_search(grid, src, dest)
+        actual = a_star.a_star_search(grid, src, dest)
+        expected = [
+            (8, 0), (7, 0), (6, 0), (5, 0), (4, 0), (4, 1), 
+            (4, 2), (3, 2), (2, 2), (1, 2), (1, 1), (1, 0), (0, 0)
+        ]
+
+        self.assertEqual(actual, expected)
+
+
+    def test_invalid_src_blocked(self):
+        grid = [
+            ['.', '@', '.', '.', '.', '.', '@', '.', '.', '.'],
+            ['.', '.', '.', '@', '.', '.', '.', '@', '.', '.'],
+            ['.', '.', '.', '@', '.', '.', '@', '.', '@', '.'],
+            ['@', '@', '.', '@', '.', '@', '@', '@', '@', '.'],
+            ['.', '.', '.', '@', '.', '.', '.', '@', '.', '@'],
+            ['.', '@', '.', '.', '.', '.', '@', '.', '@', '@'],
+            ['.', '@', '@', '@', '@', '.', '@', '@', '@', '.'],
+            ['.', '@', '.', '.', '.', '.', '@', '.', '.', '.'],
+            ['.', '.', '.', '@', '@', '@', '.', '@', '@', '.']
+        ]
+
+        a = AStar(grid)
+        src = [0, 1]
+        dest = [0, 0]
+
+        actual = a.a_star_search(grid, src, dest)
+        expected = []
+
+        self.assertEqual(actual, expected)
+
+    def test_invalid_dest_blocked(self):
+        grid = [
+            ['.', '@', '.', '.', '.', '.', '@', '.', '.', '.'],
+            ['.', '.', '.', '@', '.', '.', '.', '@', '.', '.'],
+            ['.', '.', '.', '@', '.', '.', '@', '.', '@', '.'],
+            ['@', '@', '.', '@', '.', '@', '@', '@', '@', '.'],
+            ['.', '.', '.', '@', '.', '.', '.', '@', '.', '@'],
+            ['.', '@', '.', '.', '.', '.', '@', '.', '@', '@'],
+            ['.', '@', '@', '@', '@', '.', '@', '@', '@', '.'],
+            ['.', '@', '.', '.', '.', '.', '@', '.', '.', '.'],
+            ['.', '.', '.', '@', '@', '@', '.', '@', '@', '.']
+        ]
+
+        a = AStar(grid)
+        src = [0, 0]
+        dest = [0, 1]
+
+        actual = a.a_star_search(grid, src, dest)
+        expected = []
+
+        self.assertEqual(actual, expected)       
+
+    def test_invalid_path_src_is_dest(self):
+        grid = [
+            ['.', '@', '.', '.', '.', '.', '@', '.', '.', '.'],
+            ['.', '.', '.', '@', '.', '.', '.', '@', '.', '.'],
+            ['.', '.', '.', '@', '.', '.', '@', '.', '@', '.'],
+            ['@', '@', '.', '@', '.', '@', '@', '@', '@', '.'],
+            ['.', '.', '.', '@', '.', '.', '.', '@', '.', '@'],
+            ['.', '@', '.', '.', '.', '.', '@', '.', '@', '@'],
+            ['.', '@', '@', '@', '@', '.', '@', '@', '@', '.'],
+            ['.', '@', '.', '.', '.', '.', '@', '.', '.', '.'],
+            ['.', '.', '.', '@', '@', '@', '.', '@', '@', '.']
+        ]
+
+        a = AStar(grid)
+        src = [0, 0]
+        dest = [0, 0]
+
+        actual = a.a_star_search(grid, src, dest)
+        expected = []
+
+        self.assertEqual(actual, expected)
