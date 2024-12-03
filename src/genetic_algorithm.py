@@ -1,6 +1,5 @@
 import json
 import numpy as np
-from collections import deque
 
 class GeneticAlgorithm:
     '''
@@ -454,3 +453,43 @@ class GeneticAlgorithm:
         inverted_subtour = chromosome[startIdx : endIdx][::-1]
         chromosome[startIdx : endIdx] = inverted_subtour
         return chromosome 
+
+    '''
+    Determines the fitness of the individual. Currently, our metric is 
+        sum of distances between robot and task, with the goal of minimization.
+
+    Params
+        grid: The map that will be used for the robots to traverse
+        chromosome: The candidate solution
+        tasks: The number of tasks
+        robots: The number of robots
+        robot_loc: The initial robot locations
+
+    Returns
+        The fitness, which is simply the sum of the distances between the 
+            robots and their tasks.
+    '''
+    def __fitness(self, grid, chromosome, tasks, robots, robot_loc):
+        # read the map that will be used
+
+        # get each subtour of each robot
+
+        # calculate the distances of each subtour
+
+        # combine
+        return 0
+
+    '''
+    Helper function for fitness. Calculates the distance of the subtour,
+        and the robot using A*
+
+    Params
+        grid: The map that will be used for the robots to traverse
+        subtour: The subtour whose distances will be evaluated
+        robot_loc: The initial robot locations
+
+    Returns
+        The distance between all of the tasks in the subtour.
+    '''
+    def __fitness_A_star(self, subtour, robot_loc):
+        return 0
