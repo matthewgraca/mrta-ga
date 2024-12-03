@@ -1,5 +1,7 @@
 import json
 import numpy as np
+from src.a_star import AStar
+from itertools import islice
 
 class GeneticAlgorithm:
     '''
@@ -105,13 +107,48 @@ class GeneticAlgorithm:
     '''
     Accesses the list of tasks from a json file
     Format -- tasks: [id, release_time, [x1, y1, x2, y2]]
+        - id : the id number of the task
+        - release_time: the time when the task will be made available
+        - x1, y1: the coordinate of the source of the errand
+        - x2, y2: the coordinate of the destination of the errand
 
     Params:
-        path: path of the file
+        path: Path of the file containing the tasks
+
+    Returns:
+        The tasks using the formatting:
+            id : [(x1, y1), (x2, y2)]
     '''
-    def access_tasks(path='maps/task_list.json'):
-        with open(path, 'r') as file:
-            tasks = json.load(file)
+    def access_tasks(self, path='maps/task_list.json'):
+        # read tasks json file
+        with open(path) as file:
+            t = json.load(file)
+
+        # remove release time, reformat as:
+        # id : [(x1, y1), (x2, y2)]
+        errands = {}
+        for task_list in t.values():
+            for details in task_list:
+                id_num, release_time, errand_coords = details
+                errand_src = errand_coords[0], errand_coords[1]
+                errand_dest = errand_coords[2], errand_coords[3]
+                errands[id_num] = [errand_src, errand_dest]
+
+        return errands
+
+    '''
+    Reads the map into a 2D grid
+    Format -- '.' for a valid path, '@' for an obstacle.
+
+    Params:
+        path: Path of the file containing the map 
+
+    Returns:
+        A 2D list containing the map
+    '''
+    def access_map(self, path):
+        # each character is a cell
+        return np.genfromtxt(path, dtype='str', delimiter=1)
 
     '''
     Runs the genetic algorithm with the defined parameters
@@ -470,9 +507,40 @@ class GeneticAlgorithm:
             robots and their tasks.
     '''
     def __fitness(self, grid, chromosome, tasks, robots, robot_loc):
+        # TODO have this passed in above fitness(), with tasks?
         # read the map that will be used
+        grid = self.access_map('maps/warehouse_small.txt')
+        tasks, robots = 12, 3
+        chromosome = [12, 3, 4, 10, 11, 8, 5, 9, 2, 6, 1, 7, 5, 3, 4]
 
         # get each subtour of each robot
+
+        # that's robot -> errand_src -> errand_dest for each task
+        # get tasks and their errand src/dest points 
+        task_list = self.access_tasks('maps/task_list.json')
+        
+        # hardcode only 12 tasks
+        cut_task_list = [task_list[t] for t in list(islice(task_list, tasks))]
+        #print(cut_task_list)
+
+        # get path from robot to errand_src
+        robot_loc = [3, 8]
+        src = robot_loc
+        dest = cut_task_list[0][0] # task 1, errand_src
+        astar = AStar(grid)
+        path = astar.a_star_search(grid, src, dest)
+        print(path)
+        print(len(path))
+
+        # then get path from errand_src to errand_dest
+        src = dest
+        dest = cut_task_list[0][1]
+        path = astar.a_star_search(grid, src, dest)
+        print(path)
+        print(len(path))
+        # TODO now repeat this until the subtour of a robot is complete
+        # TODO then, until all the subtours for each robot is complete
+        
 
         # calculate the distances of each subtour
 
