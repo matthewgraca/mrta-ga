@@ -9,6 +9,7 @@ class ConstructorTest(unittest.TestCase):
         ga = GeneticAlgorithm()
         actual = ga.get_parameters()
         expected = {
+            'objective_func':'makespan',
             'pop_size' : 100,
             'pop_init' : 'random',
             'selection': 'sus',
@@ -24,6 +25,7 @@ class ConstructorTest(unittest.TestCase):
         ga = GeneticAlgorithm(pop_size=1000, pc=0.1, pm=0.3)
         actual = ga.get_parameters()
         expected = {
+            'objective_func':'makespan',
             'pop_size' : 1000,
             'pop_init' : 'random',
             'selection': 'sus',
@@ -52,3 +54,6 @@ class ConstructorTest(unittest.TestCase):
 
     def test_invalid_replacement_parameter(self):
         self.assertRaises(ValueError, GeneticAlgorithm, replacement='buh')
+
+    def test_invalid_objective_func_parameter(self):
+        self.assertRaises(ValueError, GeneticAlgorithm, objective_func='buh')

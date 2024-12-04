@@ -6,6 +6,8 @@ from itertools import islice
 class GeneticAlgorithm:
     '''
     Parameters:
+        objective_func: Objective function that will be used for calculating
+            fitness, default makespan
         pop_size: Population size, default 100
         pop_init: Population initialization method, default random
         selection: Selection method, default stochastic universal sampling
@@ -17,6 +19,7 @@ class GeneticAlgorithm:
     '''
     def __init__(
             self, 
+            objective_func='makespan',
             pop_size=100, 
             pop_init='random',
             selection='sus',
@@ -28,12 +31,14 @@ class GeneticAlgorithm:
     ):
         # check parameters
         self.__validate_params(
+            objective_func,
             pop_size, pop_init, 
             selection, crossover, mutation, pc, pm, 
             replacement
         )
 
         # initialize
+        self.objective_func = objective_func
         self.pop_size = pop_size
         self.pop_init = pop_init
         self.selection = selection
@@ -48,12 +53,14 @@ class GeneticAlgorithm:
     '''
     def __validate_params(
         self, 
+        objective_func,
         pop_size, pop_init, 
         selection, crossover, mutation, pc, pm, 
         replacement
     ):
         # dictionary of valid parameters
         valid_params = {
+            'objective_func': {'makespan'},
             'pop_init'      : {'random'},
             'selection'     : {'sus'},
             'crossover'     : {'tcx'},
@@ -66,6 +73,10 @@ class GeneticAlgorithm:
             raise ValueError(f"pop_size should be in the range [1, 100000]")
 
         # ensure valid methods
+        if objective_func not in valid_params['objective_func']:
+            method = "Objective function"
+            err_msg = f"{method} method \'{objective_func}\' is not defined"
+            raise ValueError(err_msg)
         if pop_init not in valid_params['pop_init']:
             method = "Population initialization"
             raise ValueError(f"{method} method \'{pop_init}\' is not defined")
@@ -80,7 +91,8 @@ class GeneticAlgorithm:
             raise ValueError(f"{method} method \'{mutation}\' is not defined")
         if replacement not in valid_params['replacement']:
             method = "Replacement"
-            raise ValueError(f"{method} method \'{replacement}\' is not defined")
+            err_msg = f"{method} method \'{replacement}\' is not defined"
+            raise ValueError(err_msg)
 
         # limit pc to [0.0, 1.0]
         if not 0.0 <= pc <= 1.0:
@@ -94,6 +106,7 @@ class GeneticAlgorithm:
     '''
     def get_parameters(self):
         return {
+            'objective_func': self.objective_func,
             'pop_size'      : self.pop_size,
             'pop_init'      : self.pop_init,
             'selection'     : self.selection,
@@ -524,11 +537,13 @@ class GeneticAlgorithm:
     '''
     def __fitness(self, grid, chromosome, tasks, robots, robot_loc):
         '''
+        method = self.objective_func
         # TODO wrapper, move the below code down to fitness_a_star
         fitness_methods = {
             'makespan'      : self.__makespan,
             'longest_path'  : self.__longest_path
         }
+        return fitness_methods[method]()
         '''
 
         # TODO remove hardcoded grid, tasks, robots, and chromosome
@@ -579,9 +594,8 @@ class GeneticAlgorithm:
         return path_len 
 
     '''
-    Helper function for fitness. Calculates the distance of the subtour,
-        and the robot using A*
-
+    Helper function for fitness. An objective function that measures the 
+        sum of the length of paths of set of subtours.
     Params
         grid: The map that will be used for the robots to traverse
         subtour: The subtour whose distances will be evaluated
@@ -590,5 +604,5 @@ class GeneticAlgorithm:
     Returns
         The distance between all of the tasks in the subtour.
     '''
-    def __fitness_A_star(self, subtour, robot_loc):
+    def __makespan(self, subtour, robot_loc):
         return 0
