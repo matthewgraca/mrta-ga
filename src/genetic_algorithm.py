@@ -536,24 +536,40 @@ class GeneticAlgorithm:
             robots and their tasks.
     '''
     def __fitness(self, task_list, grid, chromosome, tasks, robots, robot_loc):
-        '''
         method = self.objective_func
-        # TODO wrapper, move the below code down to fitness_a_star
         fitness_methods = {
             'makespan'      : self.__makespan,
             'longest_path'  : self.__longest_path
         }
-        return fitness_methods[method]()
-        '''
+        return fitness_methods[method](
+            task_list, grid, chromosome, tasks, robots, robot_loc
+        )
 
+    '''
+    Helper function for fitness. An objective function that measures the 
+        sum of the length of paths of set of subtours.
+    Params
+        task_list: The list of tasks to be performed
+        grid: The map that will be used for the robots to traverse
+        chromosome: The candidate solution
+        tasks: The number of tasks to be completed
+        robtos: The number of robots
+        robot_loc: The initial robot locations
+
+    Returns
+        The sum of the distance of all the paths taken to complete the tasks.
+    '''
+    def __makespan(self, task_list, grid, chromosome, tasks, robots, robot_loc):
         # TODO remove hardcoded task list?
+        # TODO pull grid up into constructor?
         cut_task_list = [task_list[t] for t in list(islice(task_list, tasks))]
 
         # get the length of each robot's subtour
-        astar = AStar(grid)
         subtours = []
         path_len = 0
-        segment_idx = self.__get_subtour_start_indices_of(chromosome, tasks, robots)
+        segment_idx = self.__get_subtour_start_indices_of(
+            chromosome, tasks, robots
+        )
         # go through each robot's subtour
         for m in range(robots):
             # subtour start-end indices
@@ -561,41 +577,52 @@ class GeneticAlgorithm:
             end = start + chromosome[tasks + m]
 
             # calculate subtour path taken by this robot
-            path = []
-            for i in range(start, end):
-                errand_idx = chromosome[i] - 1
-
-                # path from robot to errand source
-                src = robot_loc[m]
-                dest = cut_task_list[errand_idx][0]
-                curr_path = astar.a_star_search(src, dest)
-                path.extend(curr_path)
-
-                # path from errand source to errand destination
-                src = dest
-                dest = cut_task_list[errand_idx][1]
-                curr_path = astar.a_star_search(src, dest)
-                path.extend(curr_path)
-
-                # update robot's new location
-                robot_loc[m] = dest
+            path = self.__fitness_get_subtour(
+                grid, chromosome[start:end], robot_loc[m], cut_task_list
+            )
 
             # append subtour to subtours list, and total path length of subtours
             subtours.append(path)
             path_len += len(path)
 
-        return path_len 
+        return path_len
 
     '''
-    Helper function for fitness. An objective function that measures the 
-        sum of the length of paths of set of subtours.
-    Params
-        grid: The map that will be used for the robots to traverse
-        subtour: The subtour whose distances will be evaluated
-        robot_loc: The initial robot locations
+    Helper fitness function that calculates the path of the subtour.
 
-    Returns
-        The distance between all of the tasks in the subtour.
+    Params:
+        grid: The map being traversed
+        segment: The segment of the candidate solution containing the subtour 
+        robot_loc: The initial location of the robot, as a pair of coordinates
+        task_list: The list containing the coordinates of the tasks
+
+    Returns:
+        The path taken by the robot to complete the subtour, as a list of pairs.
     '''
-    def __makespan(self, subtour, robot_loc):
-        return 0
+    def __fitness_get_subtour(self, grid, segment, robot_loc, task_list):
+        # calculate subtour path taken by this robot
+        astar = AStar(grid)
+        path = []
+        for vertex_id in segment:
+            errand_idx = vertex_id - 1
+
+            # path from robot to errand source
+            src = robot_loc
+            dest = task_list[errand_idx][0]
+            curr_path = astar.a_star_search(src, dest)
+            path.extend(curr_path)
+
+            # path from errand source to errand destination
+            src = dest
+            dest = task_list[errand_idx][1]
+            curr_path = astar.a_star_search(src, dest)
+            path.extend(curr_path)
+
+            # update robot's new location
+            robot_loc = dest
+
+        # append subtour to subtours list, and total path length of subtours
+        return path 
+
+    def __longest_path(self):
+        return
