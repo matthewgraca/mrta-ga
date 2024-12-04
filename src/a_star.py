@@ -39,15 +39,14 @@ class AStar:
         We currently use '@' to denote a block, '.' for unblocked
 
     Params:
-        grid: The map being traversed
         row: The row index
         col: The column index
 
     Returns:
         True if the cell is a valid path, false if not
     '''
-    def is_unblocked(self, grid, row, col):
-        return grid[row][col] == '.'
+    def is_unblocked(self, row, col):
+        return self.grid[row][col] == '.'
 
     '''
     Determines if the given cell is the destination
@@ -111,7 +110,6 @@ class AStar:
     Performs A* search
 
     Params:
-        grid: The space that is being traversed
         src: The location of the source cell
         dest: The locatin of the destination cell
 
@@ -119,9 +117,9 @@ class AStar:
         List containing the path from src to dest. If no such path exists, 
             an empty list is returned.
     '''
-    def a_star_search(self, grid, src, dest):
+    def a_star_search(self, src, dest):
         # run initial validity check for src and dest coordinates
-        if not self.__initial_validity_check(grid, src, dest):
+        if not self.__initial_validity_check(src, dest):
             return []
 
         # initialize list of visited cells
@@ -163,7 +161,7 @@ class AStar:
                 # If the successor is valid, unblocked, and not yet visited
                 if (
                     self.is_valid(next_x, next_y) and 
-                    self.is_unblocked(grid, next_x, next_y) and 
+                    self.is_unblocked(next_x, next_y) and 
                     not closed_list[next_x][next_y]
                 ):
                     # if destination is found
@@ -203,14 +201,13 @@ class AStar:
         - If the source is not already at the destination
 
     Params:
-        grid: The space being traversed
         src: The source cell
         dest: The destination cell
 
     Returns:
         True if the checks are passed, false if otherwise. 
     '''
-    def __initial_validity_check(self, grid, src, dest):
+    def __initial_validity_check(self, src, dest):
         src_x, src_y = src
         dest_x, dest_y = dest
 
@@ -224,8 +221,8 @@ class AStar:
 
         # Check if the source and destination are unblocked
         if (
-            not self.is_unblocked(grid, src_x, src_y) or 
-            not self.is_unblocked(grid, dest_x, dest_y)
+            not self.is_unblocked(src_x, src_y) or 
+            not self.is_unblocked(dest_x, dest_y)
         ):
             return False
             #raise ValueError("Source or the destination is blocked")

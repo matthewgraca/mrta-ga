@@ -55,7 +55,7 @@ class AStarTest(unittest.TestCase):
         dest = [0, 0]
 
         a_star = AStar(grid)
-        actual = a_star.a_star_search(grid, src, dest)
+        actual = a_star.a_star_search(src, dest)
         expected = [
             (8, 0), (7, 0), (6, 0), (5, 0), (4, 0), (4, 1), 
             (4, 2), (3, 2), (2, 2), (1, 2), (1, 1), (1, 0), (0, 0)
@@ -81,7 +81,7 @@ class AStarTest(unittest.TestCase):
         src = [0, 1]
         dest = [0, 0]
 
-        actual = a.a_star_search(grid, src, dest)
+        actual = a.a_star_search(src, dest)
         expected = []
 
         self.assertEqual(actual, expected)
@@ -103,7 +103,7 @@ class AStarTest(unittest.TestCase):
         src = [0, 0]
         dest = [0, 1]
 
-        actual = a.a_star_search(grid, src, dest)
+        actual = a.a_star_search(src, dest)
         expected = []
 
         self.assertEqual(actual, expected)       
@@ -125,7 +125,7 @@ class AStarTest(unittest.TestCase):
         src = [0, 0]
         dest = [0, 0]
 
-        actual = a.a_star_search(grid, src, dest)
+        actual = a.a_star_search(src, dest)
         expected = []
 
         self.assertEqual(actual, expected)

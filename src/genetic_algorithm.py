@@ -173,6 +173,10 @@ class GeneticAlgorithm:
         '''
 
     '''
+    **Population initialization functions**
+    '''
+
+    '''
     Wrapper function for initializing population
 
     Params:
@@ -240,6 +244,10 @@ class GeneticAlgorithm:
         chromosome = np.concatenate((chromo1, chromo2)) 
 
         return chromosome
+
+    '''
+    **Crossover functions**
+    '''
 
     '''Wrapper function for crossover
 
@@ -447,6 +455,10 @@ class GeneticAlgorithm:
         return c1_tasks + c1_robots
 
     '''
+    **Mutation functions**
+    '''
+
+    '''
     Wrapper function for mutation 
 
     Params:
@@ -492,6 +504,10 @@ class GeneticAlgorithm:
         return chromosome 
 
     '''
+    **Fitness functions**
+    '''
+
+    '''
     Determines the fitness of the individual. Currently, our metric is 
         sum of distances between robot and task, with the goal of minimization.
 
@@ -500,52 +516,67 @@ class GeneticAlgorithm:
         chromosome: The candidate solution
         tasks: The number of tasks
         robots: The number of robots
-        robot_loc: The initial robot locations
+        robot_loc: The initial robot locations, as pairs
 
     Returns
         The fitness, which is simply the sum of the distances between the 
             robots and their tasks.
     '''
     def __fitness(self, grid, chromosome, tasks, robots, robot_loc):
-        # TODO have this passed in above fitness(), with tasks?
-        # read the map that will be used
+        '''
+        # TODO wrapper, move the below code down to fitness_a_star
+        fitness_methods = {
+            'makespan'      : self.__makespan,
+            'longest_path'  : self.__longest_path
+        }
+        '''
+
+        # TODO remove hardcoded grid, tasks, robots, and chromosome
         grid = self.access_map('maps/warehouse_small.txt')
+        task_list = self.access_tasks('maps/task_list.json')
         tasks, robots = 12, 3
         chromosome = [12, 3, 4, 10, 11, 8, 5, 9, 2, 6, 1, 7, 5, 3, 4]
 
-        # get each subtour of each robot
-
-        # that's robot -> errand_src -> errand_dest for each task
-        # get tasks and their errand src/dest points 
-        task_list = self.access_tasks('maps/task_list.json')
-        
-        # hardcode only 12 tasks
+        # TODO remove hardcoded task list?
         cut_task_list = [task_list[t] for t in list(islice(task_list, tasks))]
-        #print(cut_task_list)
 
-        # get path from robot to errand_src
-        robot_loc = [3, 8]
-        src = robot_loc
-        dest = cut_task_list[0][0] # task 1, errand_src
+        # TODO remove hardcode
+        robot_loc = [(3, 8), (5, 3), (20, 20)]
+
+        # get the length of each robot's subtour
         astar = AStar(grid)
-        path = astar.a_star_search(grid, src, dest)
-        print(path)
-        print(len(path))
+        subtours = []
+        path_len = 0
+        segment_idx = self.__get_subtour_start_indices_of(chromosome, tasks, robots)
+        # go through each robot's subtour
+        for m in range(robots):
+            # subtour start-end indices
+            start = segment_idx[m]
+            end = start + chromosome[tasks + m]
 
-        # then get path from errand_src to errand_dest
-        src = dest
-        dest = cut_task_list[0][1]
-        path = astar.a_star_search(grid, src, dest)
-        print(path)
-        print(len(path))
-        # TODO now repeat this until the subtour of a robot is complete
-        # TODO then, until all the subtours for each robot is complete
-        
+            # calculate subtour path taken by this robot
+            path = []
+            for i in range(start, end):
+                errand_idx = chromosome[i] - 1
 
-        # calculate the distances of each subtour
+                # path from robot to errand source
+                src = robot_loc[m]
+                dest = cut_task_list[errand_idx][0]
+                path.extend(astar.a_star_search(src, dest))
 
-        # combine
-        return 0
+                # path from errand source to errand destination
+                src = dest
+                dest = cut_task_list[errand_idx][1]
+                path.extend(astar.a_star_search(src, dest))
+
+                # update robot's new location
+                robot_loc[m] = dest
+
+            # append subtour to subtours list, and total path length of subtours
+            subtours.append(path)
+            path_len += len(path)
+
+        return path_len 
 
     '''
     Helper function for fitness. Calculates the distance of the subtour,
