@@ -81,10 +81,7 @@ class AStarTest(unittest.TestCase):
         src = [0, 1]
         dest = [0, 0]
 
-        actual = a.a_star_search(src, dest)
-        expected = []
-
-        self.assertEqual(actual, expected)
+        self.assertRaises(ValueError, a.a_star_search, src, dest)
 
     def test_invalid_dest_blocked(self):
         grid = [
@@ -103,10 +100,7 @@ class AStarTest(unittest.TestCase):
         src = [0, 0]
         dest = [0, 1]
 
-        actual = a.a_star_search(src, dest)
-        expected = []
-
-        self.assertEqual(actual, expected)       
+        self.assertRaises(ValueError, a.a_star_search, src, dest)
 
     def test_invalid_path_src_is_dest(self):
         grid = [
@@ -125,7 +119,4 @@ class AStarTest(unittest.TestCase):
         src = [0, 0]
         dest = [0, 0]
 
-        actual = a.a_star_search(src, dest)
-        expected = []
-
-        self.assertEqual(actual, expected)
+        self.assertRaises(ValueError, a.a_star_search, src, dest)

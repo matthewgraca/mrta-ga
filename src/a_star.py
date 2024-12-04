@@ -119,8 +119,7 @@ class AStar:
     '''
     def a_star_search(self, src, dest):
         # run initial validity check for src and dest coordinates
-        if not self.__initial_validity_check(src, dest):
-            return []
+        self.__initial_validity_check(src, dest)
 
         # initialize list of visited cells
         closed_list = [
@@ -191,8 +190,9 @@ class AStar:
                             new_cell.i = curr_x
                             new_cell.j = curr_y
 
-        # return empty path if the destination hasn't been found
-        return []
+        # valid path should have been found by now
+        # only possible if there is no valid path at all between src and dest
+        raise RuntimeError("No valid path has been found")
 
     '''
     Performs initial validity check:
@@ -205,7 +205,7 @@ class AStar:
         dest: The destination cell
 
     Returns:
-        True if the checks are passed, false if otherwise. 
+        None. Throws errors if the checks are not passed
     '''
     def __initial_validity_check(self, src, dest):
         src_x, src_y = src
@@ -216,21 +216,17 @@ class AStar:
             not self.is_valid(src_x, src_y) or 
             not self.is_valid(dest_x, dest_y)
         ):
-            return False
-            #raise ValueError("Source or destination is invalid")
+            raise ValueError("Source or destination is out of bound")
 
         # Check if the source and destination are unblocked
         if (
             not self.is_unblocked(src_x, src_y) or 
             not self.is_unblocked(dest_x, dest_y)
         ):
-            return False
-            #raise ValueError("Source or the destination is blocked")
+            raise ValueError("Source or the destination is blocked")
 
         # Check if we are already at the destination
         if self.is_destination(src_x, src_y, dest):
-            return False
-            #raise ValueError("We are already at the destination")
+            raise ValueError("Source is already at the destination")
 
-        return True 
-
+        return
