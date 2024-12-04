@@ -7,7 +7,7 @@ class GeneticAlgorithm:
     '''
     Parameters:
         objective_func: Objective function that will be used for calculating
-            fitness, default makespan
+            fitness, default flow_time 
         pop_size: Population size, default 100
         pop_init: Population initialization method, default random
         selection: Selection method, default stochastic universal sampling
@@ -19,7 +19,7 @@ class GeneticAlgorithm:
     '''
     def __init__(
             self, 
-            objective_func='makespan',
+            objective_func='flow_time',
             pop_size=100, 
             pop_init='random',
             selection='sus',
@@ -60,7 +60,7 @@ class GeneticAlgorithm:
     ):
         # dictionary of valid parameters
         valid_params = {
-            'objective_func': {'makespan'},
+            'objective_func': {'makespan', 'flow_time'},
             'pop_init'      : {'random'},
             'selection'     : {'sus'},
             'crossover'     : {'tcx'},
@@ -539,7 +539,7 @@ class GeneticAlgorithm:
         method = self.objective_func
         fitness_methods = {
             'makespan'      : self.__makespan,
-            'longest_path'  : self.__longest_path
+            'flow_time'     : self.__flow_time
         }
         return fitness_methods[method](
             task_list, grid, chromosome, tasks, robots, robot_loc
@@ -547,7 +547,8 @@ class GeneticAlgorithm:
 
     '''
     Helper function for fitness. An objective function that measures the 
-        sum of the length of paths of set of subtours.
+        average length of all the agents' paths.
+
     Params
         task_list: The list of tasks to be performed
         grid: The map that will be used for the robots to traverse
@@ -557,9 +558,9 @@ class GeneticAlgorithm:
         robot_loc: The initial robot locations
 
     Returns
-        The sum of the distance of all the paths taken to complete the tasks.
+        The average length of all the agents' paths.
     '''
-    def __makespan(self, task_list, grid, chromosome, tasks, robots, robot_loc):
+    def __flow_time(self, task_list, grid, chromosome, tasks, robots, robot_loc):
         # TODO remove hardcoded task list?
         # TODO pull grid up into constructor?
         cut_task_list = [task_list[t] for t in list(islice(task_list, tasks))]
@@ -585,7 +586,7 @@ class GeneticAlgorithm:
             subtours.append(path)
             path_len += len(path)
 
-        return path_len
+        return path_len / len(subtours)
 
     '''
     Helper fitness function that calculates the path of the subtour.
@@ -624,5 +625,41 @@ class GeneticAlgorithm:
         # append subtour to subtours list, and total path length of subtours
         return path 
 
-    def __longest_path(self):
-        return
+    '''
+    Helper function for fitness. An objective function that measures the 
+        longest path length out of all the agents' paths.
+
+    Params
+        task_list: The list of tasks to be performed
+        grid: The map that will be used for the robots to traverse
+        chromosome: The candidate solution
+        tasks: The number of tasks to be completed
+        robtos: The number of robots
+        robot_loc: The initial robot locations
+
+    Returns
+        The longest path length out of all the agents' paths.
+    '''
+    def __makespan(self, task_list, grid, chromosome, tasks, robots, robot_loc):
+        cut_task_list = [task_list[t] for t in list(islice(task_list, tasks))]
+
+        # get the length of each robot's subtour
+        max_path_len = 0
+        segment_idx = self.__get_subtour_start_indices_of(
+            chromosome, tasks, robots
+        )
+        # go through each robot's subtour
+        for m in range(robots):
+            # subtour start-end indices
+            start = segment_idx[m]
+            end = start + chromosome[tasks + m]
+
+            # calculate subtour path taken by this robot
+            path = self.__fitness_get_subtour(
+                grid, chromosome[start:end], robot_loc[m], cut_task_list
+            )
+
+            # update makespan if the current path is larger
+            max_path_len = max(max_path_len, len(path))
+
+        return max_path_len
