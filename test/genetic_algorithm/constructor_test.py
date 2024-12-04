@@ -9,7 +9,7 @@ class ConstructorTest(unittest.TestCase):
         ga = GeneticAlgorithm()
         actual = ga.get_parameters()
         expected = {
-            'objective_func':'makespan',
+            'objective_func':'flow_time',
             'pop_size' : 100,
             'pop_init' : 'random',
             'selection': 'sus',
@@ -25,7 +25,7 @@ class ConstructorTest(unittest.TestCase):
         ga = GeneticAlgorithm(pop_size=1000, pc=0.1, pm=0.3)
         actual = ga.get_parameters()
         expected = {
-            'objective_func':'makespan',
+            'objective_func':'flow_time',
             'pop_size' : 1000,
             'pop_init' : 'random',
             'selection': 'sus',
