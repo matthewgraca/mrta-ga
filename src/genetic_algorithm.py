@@ -535,7 +535,7 @@ class GeneticAlgorithm:
         The fitness, which is simply the sum of the distances between the 
             robots and their tasks.
     '''
-    def __fitness(self, grid, chromosome, tasks, robots, robot_loc):
+    def __fitness(self, task_list, grid, chromosome, tasks, robots, robot_loc):
         '''
         method = self.objective_func
         # TODO wrapper, move the below code down to fitness_a_star
@@ -546,17 +546,8 @@ class GeneticAlgorithm:
         return fitness_methods[method]()
         '''
 
-        # TODO remove hardcoded grid, tasks, robots, and chromosome
-        grid = self.access_map('maps/warehouse_small.txt')
-        task_list = self.access_tasks('maps/task_list.json')
-        tasks, robots = 12, 3
-        chromosome = [12, 3, 4, 10, 11, 8, 5, 9, 2, 6, 1, 7, 5, 3, 4]
-
         # TODO remove hardcoded task list?
         cut_task_list = [task_list[t] for t in list(islice(task_list, tasks))]
-
-        # TODO remove hardcode
-        robot_loc = [(3, 8), (5, 3), (20, 20)]
 
         # get the length of each robot's subtour
         astar = AStar(grid)
@@ -577,12 +568,14 @@ class GeneticAlgorithm:
                 # path from robot to errand source
                 src = robot_loc[m]
                 dest = cut_task_list[errand_idx][0]
-                path.extend(astar.a_star_search(src, dest))
+                curr_path = astar.a_star_search(src, dest)
+                path.extend(curr_path)
 
                 # path from errand source to errand destination
                 src = dest
                 dest = cut_task_list[errand_idx][1]
-                path.extend(astar.a_star_search(src, dest))
+                curr_path = astar.a_star_search(src, dest)
+                path.extend(curr_path)
 
                 # update robot's new location
                 robot_loc[m] = dest
