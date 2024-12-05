@@ -1,6 +1,6 @@
-import json
 import numpy as np
 from src.a_star import AStar
+from src.environment_initializer import EnvironmentInitializer
 from itertools import islice
 
 class GeneticAlgorithm:
@@ -27,7 +27,8 @@ class GeneticAlgorithm:
             mutation='inverse', 
             pc=0.4, 
             pm=0.6,
-            replacement='none'
+            replacement='none',
+            env=None
     ):
         # check parameters
         self.__validate_params(
@@ -47,6 +48,9 @@ class GeneticAlgorithm:
         self.pc = pc
         self.pm = pm
         self.replacement = replacement
+
+        # initialize environment
+        self.env = env
 
     '''
     Validates the parameters. Throws errors if they are not valid
@@ -118,52 +122,6 @@ class GeneticAlgorithm:
         }
 
     '''
-    Accesses the list of tasks from a json file
-    Format -- tasks: [id, release_time, [x1, y1, x2, y2]]
-        - id : the id number of the task
-        - release_time: the time when the task will be made available
-        - x1, y1: the coordinate of the source of the errand
-        - x2, y2: the coordinate of the destination of the errand
-
-    Params:
-        path: Path of the file containing the tasks
-
-    Returns:
-        The tasks using the formatting:
-            id : [(x1, y1), (x2, y2)]
-    '''
-    def access_tasks(self, path='maps/task_list.json'):
-        # read tasks json file
-        with open(path) as file:
-            t = json.load(file)
-
-        # remove release time, reformat as:
-        # id : [(x1, y1), (x2, y2)]
-        errands = {}
-        for task_list in t.values():
-            for details in task_list:
-                id_num, release_time, errand_coords = details
-                errand_src = errand_coords[0], errand_coords[1]
-                errand_dest = errand_coords[2], errand_coords[3]
-                errands[id_num] = [errand_src, errand_dest]
-
-        return errands
-
-    '''
-    Reads the map into a 2D grid
-    Format -- '.' for a valid path, '@' for an obstacle.
-
-    Params:
-        path: Path of the file containing the map 
-
-    Returns:
-        A 2D list containing the map
-    '''
-    def access_map(self, path):
-        # each character is a cell
-        return np.genfromtxt(path, dtype='str', delimiter=1)
-
-    '''
     Runs the genetic algorithm with the defined parameters
     '''
     def run(self):
@@ -194,36 +152,32 @@ class GeneticAlgorithm:
 
     Params:
         pop_size: The size of the population
-        tasks: The number of tasks to finish
-        robots: The number of robots
 
     Returns:
         The population of candidate solutions, as a result of the given method
     '''
-    def __pop_init(self, pop_size, tasks, robots):
+    def __pop_init(self, pop_size):
         method = self.pop_init
         # list of current population initialization methods
         pop_init_methods = {
             'random' : self.__random_pop_init
         }
-        return pop_init_methods[method](pop_size, tasks, robots)
+        return pop_init_methods[method](pop_size)
 
     '''
     Implements randomized population initialization.
 
     Params:
         pop_size: The size of the population
-        tasks: The number of tasks
-        robots: The number of robots
 
     Returns:
         The population, randomly generated based on the given tasks and robots.
     '''
-    def __random_pop_init(self, pop_size, tasks, robots):
+    def __random_pop_init(self, pop_size):
         pop = []
         for i in range(pop_size):
             # uses two-part chromosome representation
-            chromosome = self.__create_two_part_chromosome(tasks, robots)
+            chromosome = self.__create_two_part_chromosome()
             pop.append(chromosome)
 
         return pop 
@@ -233,14 +187,11 @@ class GeneticAlgorithm:
         the first part contains the tours of each robot, while the second 
         part contains the size of the tour taken by each robot.
 
-    Params:
-        tasks: The number of tasks to complete
-        robots: The number of robots in the fleet
-
     Returns:
         The chromosome encoding of the candidate solution.
     '''
-    def __create_two_part_chromosome(self, tasks, robots):
+    def __create_two_part_chromosome(self):
+        tasks, robots = self.env.num_of_tasks(), self.env.num_of_robots()
         # part 1: random permutation of tasks
         chromo1 = np.random.permutation(tasks) + 1
         chromo2 = [0] * robots
@@ -267,19 +218,17 @@ class GeneticAlgorithm:
     Params:
         p1: The first parent
         p2: The second parent
-        tasks: The number of tasks
-        robots: The number of robots
 
     Returns:
         A pair of offspring, as a result of whatever crossover method was given
     '''
-    def __crossover(self, p1, p2, tasks, robots):
+    def __crossover(self, p1, p2):
         method = self.crossover
         # list of current crossover methods
         xover_methods= {
             'tcx' : self.__two_part_crossover
         }
-        return xover_methods[method](p1, p2, tasks, robots)
+        return xover_methods[method](p1, p2)
 
 
     '''
@@ -289,24 +238,23 @@ class GeneticAlgorithm:
     Params:
         p1: The first parent
         p2: The second parent
-        tasks: The number of tasks
-        robots: The number of robots 
 
     Returns:
         A child, based on p1, using TCX
     '''
-    def __tcx_create_child(self, p1, p2, tasks, robots):
+    def __tcx_create_child(self, p1, p2):
+        tasks, robots = self.env.num_of_robots(), self.env.num_of_tasks()
         # save start index of each tour
-        segment_idx = self.__get_subtour_start_indices_of(p1, tasks, robots)
+        segment_idx = self.__get_subtour_start_indices_of(p1)
 
         # select gene segment for each agent
         saved_genes, saved_tour_sizes = self.__tcx_select_gene_segments(
-            p1, tasks, robots, segment_idx
+            p1, segment_idx
         )
 
         # find and sort gene positions of genes not in the segment wrt p2
         unsaved_genes, unsaved_tour_sizes = self.__tcx_find_and_sort_unsaved_genes(
-            p1, p2, saved_genes, tasks, robots
+            p1, p2, saved_genes
         )
 
         # combine genes to create child
@@ -322,15 +270,14 @@ class GeneticAlgorithm:
     Params:
         p1: The first parent
         p2: The second parent
-        tasks: The number of tasks
-        robots: The number of robots
 
     Returns:
         A pair of offspring, as a result of TCX
     '''
-    def __two_part_crossover(self, p1, p2, tasks, robots):
-        c1 = self.__tcx_create_child(p1, p2, tasks, robots)
-        c2 = self.__tcx_create_child(p2, p1, tasks, robots)
+    def __two_part_crossover(self, p1, p2):
+        tasks, robots = self.env.num_of_tasks(), self.env.num_of_robots()
+        c1 = self.__tcx_create_child(p1, p2)
+        c2 = self.__tcx_create_child(p2, p1)
         return np.array(c1), np.array(c2)
 
     '''
@@ -338,13 +285,12 @@ class GeneticAlgorithm:
 
     Params:
         chromosome: The chromosome containing the candidate solution
-        tasks: The number of tasks
-        robots: The number of robots
 
     Returns:
         A list of the start index of each robot's subtour
     '''
-    def __get_subtour_start_indices_of(self, chromosome, tasks, robots):
+    def __get_subtour_start_indices_of(self, chromosome):
+        tasks, robots = self.env.num_of_tasks(), self.env.num_of_robots()
         segment_idx = [0]
         for i in range(robots - 1):
             assigned_tasks = chromosome[tasks + i]
@@ -356,14 +302,13 @@ class GeneticAlgorithm:
 
     Params:
         chromosome: The chromosome containing the candidate solution
-        tasks: The number of tasks
-        robots: The number of robots
         segment_idx: The start indices of each robot's subtour
 
     Returns:
         A list containing the saved genes and a list containing their tour size
     '''
-    def __tcx_select_gene_segments(self, chromosome, tasks, robots, segment_idx):
+    def __tcx_select_gene_segments(self, chromosome, segment_idx):
+        tasks, robots = self.env.num_of_tasks(), self.env.num_of_robots()
         saved_genes = []
         saved_tour_sizes = []
         for m in range(robots):
@@ -391,14 +336,13 @@ class GeneticAlgorithm:
         p1: The first parent
         p2: The second parent
         saved_genes: The gene segments that have been saved from p1
-        tasks: The number of tasks
-        robots: The number of robots
 
     Returns:
         A list containing the sorted, unsaved genes wrt p2, and a list 
             containing their tour size
     '''
-    def __tcx_find_and_sort_unsaved_genes(self, p1, p2, saved_genes, tasks, robots):
+    def __tcx_find_and_sort_unsaved_genes(self, p1, p2, saved_genes):
+        tasks, robots = self.env.num_of_tasks(), self.env.num_of_robots()
         unsaved_genes = []
         # collect all unsaved genes
         for i in range(tasks):
@@ -476,19 +420,18 @@ class GeneticAlgorithm:
 
     Params:
         chromosome: The chromosome that will be mutated
-        tasks: The number of tasks to finish
-        robots: The number of robots
 
     Returns:
         The mutated chromosome
     '''
-    def __mutation(self, chromosome, tasks, robots):
+    def __mutation(self, chromosome):
+        tasks, robots = self.env.num_of_tasks(), self.env.num_of_robots()
         method = self.mutation
         # list of current crossover methods
         mut_methods= {
             'inverse': self.__inverse_mutation
         }
-        return mut_methods[method](chromosome, tasks, robots)
+        return mut_methods[method](chromosome)
 
     '''
     Performs inverse mutation on the given chromosome. A random subtour is 
@@ -496,16 +439,15 @@ class GeneticAlgorithm:
 
     Params:
         chromosome: The chromosome that will be mutated
-        tasks: The number of tasks to finish
-        robots: The number of robots
 
     Returns:
         The mutated chromosome
     '''
-    def __inverse_mutation(self, chromosome, tasks, robots):
+    def __inverse_mutation(self, chromosome):
+        tasks, robots = self.env.num_of_tasks(), self.env.num_of_robots()
         # pick a random agent's subtour
         agent = np.random.randint(0, robots)
-        startIdxes = self.__get_subtour_start_indices_of(chromosome, tasks, robots)
+        startIdxes = self.__get_subtour_start_indices_of(chromosome)
 
         # get their indices
         startIdx = startIdxes[agent]
@@ -525,42 +467,36 @@ class GeneticAlgorithm:
         sum of distances between robot and task, with the goal of minimization.
 
     Params
-        grid: The map that will be used for the robots to traverse
         chromosome: The candidate solution
-        tasks: The number of tasks
-        robots: The number of robots
-        robot_loc: The initial robot locations, as pairs
 
     Returns
         The fitness, which is simply the sum of the distances between the 
             robots and their tasks.
     '''
-    def __fitness(self, task_list, grid, chromosome, tasks, robots, robot_loc):
+    def __fitness(self, chromosome):
         method = self.objective_func
         fitness_methods = {
             'makespan'      : self.__makespan,
             'flow_time'     : self.__flow_time
         }
-        return fitness_methods[method](
-            task_list, grid, chromosome, tasks, robots, robot_loc
-        )
+        return fitness_methods[method](chromosome)
 
     '''
     Helper function for fitness. An objective function that measures the 
         average length of all the agents' paths.
 
     Params
-        task_list: The list of tasks to be performed
-        grid: The map that will be used for the robots to traverse
         chromosome: The candidate solution
-        tasks: The number of tasks to be completed
-        robtos: The number of robots
-        robot_loc: The initial robot locations
 
     Returns
         The average length of all the agents' paths.
     '''
-    def __flow_time(self, task_list, grid, chromosome, tasks, robots, robot_loc):
+    def __flow_time(self, chromosome):
+        tasks, robots = self.env.num_of_tasks(), self.env.num_of_robots()
+        robot_loc = self.env.get_robot_loc()
+        grid = self.env.get_grid()
+        task_list = self.env.get_task_list()
+
         # TODO remove hardcoded task list?
         # TODO pull grid up into constructor?
         cut_task_list = [task_list[t] for t in list(islice(task_list, tasks))]
@@ -568,9 +504,7 @@ class GeneticAlgorithm:
         # get the length of each robot's subtour
         subtours = []
         path_len = 0
-        segment_idx = self.__get_subtour_start_indices_of(
-            chromosome, tasks, robots
-        )
+        segment_idx = self.__get_subtour_start_indices_of(chromosome)
         # go through each robot's subtour
         for m in range(robots):
             # subtour start-end indices
@@ -579,7 +513,7 @@ class GeneticAlgorithm:
 
             # calculate subtour path taken by this robot
             path = self.__fitness_get_subtour(
-                grid, chromosome[start:end], robot_loc[m], cut_task_list
+                chromosome[start:end], robot_loc[m], cut_task_list
             )
 
             # append subtour to subtours list, and total path length of subtours
@@ -592,15 +526,16 @@ class GeneticAlgorithm:
     Helper fitness function that calculates the path of the subtour.
 
     Params:
-        grid: The map being traversed
         segment: The segment of the candidate solution containing the subtour 
-        robot_loc: The initial location of the robot, as a pair of coordinates
+        robot_loc: The initial location of the robot
         task_list: The list containing the coordinates of the tasks
 
     Returns:
         The path taken by the robot to complete the subtour, as a list of pairs.
     '''
-    def __fitness_get_subtour(self, grid, segment, robot_loc, task_list):
+    def __fitness_get_subtour(self, segment, robot_loc, task_list):
+        grid = self.env.get_grid()
+
         # calculate subtour path taken by this robot
         astar = AStar(grid)
         path = []
@@ -630,24 +565,23 @@ class GeneticAlgorithm:
         longest path length out of all the agents' paths.
 
     Params
-        task_list: The list of tasks to be performed
-        grid: The map that will be used for the robots to traverse
         chromosome: The candidate solution
-        tasks: The number of tasks to be completed
-        robtos: The number of robots
-        robot_loc: The initial robot locations
 
     Returns
         The longest path length out of all the agents' paths.
     '''
-    def __makespan(self, task_list, grid, chromosome, tasks, robots, robot_loc):
+    def __makespan(self, chromosome):
+        tasks, robots = self.env.num_of_tasks(), self.env.num_of_robots()
+        robot_loc = self.env.get_robot_loc()
+        grid = self.env.get_grid()
+        task_list = self.env.get_task_list()
+
         cut_task_list = [task_list[t] for t in list(islice(task_list, tasks))]
 
         # get the length of each robot's subtour
         max_path_len = 0
-        segment_idx = self.__get_subtour_start_indices_of(
-            chromosome, tasks, robots
-        )
+        segment_idx = self.__get_subtour_start_indices_of(chromosome)
+
         # go through each robot's subtour
         for m in range(robots):
             # subtour start-end indices
@@ -656,7 +590,7 @@ class GeneticAlgorithm:
 
             # calculate subtour path taken by this robot
             path = self.__fitness_get_subtour(
-                grid, chromosome[start:end], robot_loc[m], cut_task_list
+                chromosome[start:end], robot_loc[m], cut_task_list
             )
 
             # update makespan if the current path is larger

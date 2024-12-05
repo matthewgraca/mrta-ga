@@ -1,20 +1,20 @@
 import unittest
+from src.environment_initializer import EnvironmentInitializer
 from src.genetic_algorithm import GeneticAlgorithm
 import numpy as np
 
 class CrossoverTest(unittest.TestCase):
     def test_tcx_1(self):
+        m, n = 10, 3
+        env = EnvironmentInitializer(tasks=m, robots=n)
         np.random.seed(0)
-        ga = GeneticAlgorithm(crossover='tcx')
+        ga = GeneticAlgorithm(crossover='tcx', env=env)
 
         # run 100 times for robust measure on stochastic method
-        m, n = 10, 3
         for _ in range(100):
-            p1 = ga._GeneticAlgorithm__create_two_part_chromosome(m, n)
-            p2 = ga._GeneticAlgorithm__create_two_part_chromosome(m, n)
-            actual1, actual2 = ga._GeneticAlgorithm__crossover(
-                p1, p2, m, n 
-            )
+            p1 = ga._GeneticAlgorithm__create_two_part_chromosome()
+            p2 = ga._GeneticAlgorithm__create_two_part_chromosome()
+            actual1, actual2 = ga._GeneticAlgorithm__crossover(p1, p2)
 
             # check first part is a permutation of tasks
             track = set()

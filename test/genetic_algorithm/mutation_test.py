@@ -1,17 +1,19 @@
 import unittest
+from src.environment_initializer import EnvironmentInitializer
 from src.genetic_algorithm import GeneticAlgorithm
 import numpy as np
 
 class MutationTest(unittest.TestCase):
     def test_inverse_mutation_1(self):
+        m, n = 10, 3
+        env = EnvironmentInitializer(robots=n, tasks=m)
         np.random.seed(0)
-        ga = GeneticAlgorithm(mutation='inverse')
+        ga = GeneticAlgorithm(mutation='inverse', env=env)
 
         # run 100 times for robust measure on stochastic method
-        m, n = 10, 3
         for _ in range(100):
-            chromo = ga._GeneticAlgorithm__create_two_part_chromosome(m, n)
-            actual = ga._GeneticAlgorithm__mutation(chromo, m, n)
+            chromo = ga._GeneticAlgorithm__create_two_part_chromosome()
+            actual = ga._GeneticAlgorithm__mutation(chromo)
 
             # check first part is a permutation of tasks
             track = set()
@@ -29,7 +31,7 @@ class MutationTest(unittest.TestCase):
 
             # check if a subtour was actually inverted
             inverted = False 
-            segments = ga._GeneticAlgorithm__get_subtour_start_indices_of(chromo, m, n)
+            segments = ga._GeneticAlgorithm__get_subtour_start_indices_of(chromo)
             for i in range(n):
                 # get subtour slice
                 subtour_reversed = chromo[segments[i]:chromo[m+i]][::-1]

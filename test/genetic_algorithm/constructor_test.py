@@ -1,4 +1,5 @@
 import unittest
+from src.environment_initializer import EnvironmentInitializer
 from src.genetic_algorithm import GeneticAlgorithm
 
 class ConstructorTest(unittest.TestCase):
