@@ -495,14 +495,13 @@ class GeneticAlgorithm:
 
     '''
     Determines the fitness of the individual. Currently, our metric is 
-        sum of distances between robot and task, with the goal of minimization.
+        sum of distances between robot and task, with the goal of maximization.
 
     Params:
         chromosome: The candidate solution
 
     Returns:
-        The fitness, which is simply the sum of the distances between the 
-            robots and their tasks.
+        The fitness. Larger is better.
     '''
     def __fitness(self, chromosome):
         method = self.objective_func
@@ -510,7 +509,7 @@ class GeneticAlgorithm:
             'makespan'      : self.__makespan,
             'flow_time'     : self.__flow_time
         }
-        return fitness_methods[method](chromosome)
+        return 1 / fitness_methods[method](chromosome)
 
     '''
     Helper function for fitness. An objective function that measures the 

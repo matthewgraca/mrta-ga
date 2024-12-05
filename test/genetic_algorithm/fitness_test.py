@@ -14,8 +14,8 @@ class FitnessTest(unittest.TestCase):
         chromosome = [12, 3, 4, 10, 11, 8, 5, 9, 2, 6, 1, 7, 5, 3, 4]
 
         actual = ga._GeneticAlgorithm__fitness(chromosome)
-        expected = 257
-        self.assertAlmostEqual(actual, expected, delta=1)
+        expected = 1 / 257
+        self.assertAlmostEqual(actual, expected, delta=1/257)
 
     def test_makespan(self):
         env = EnvironmentInitializer(
@@ -28,5 +28,5 @@ class FitnessTest(unittest.TestCase):
         chromosome = [12, 3, 4, 10, 11, 8, 5, 9, 2, 6, 1, 7, 5, 3, 4]
 
         actual = ga._GeneticAlgorithm__fitness(chromosome)
-        expected = 325 
+        expected = 1 / 325 
         self.assertEqual(actual, expected)
