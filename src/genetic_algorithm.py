@@ -10,7 +10,7 @@ class GeneticAlgorithm:
             fitness, default flow_time 
         pop_size: Population size, default 100
         pop_init: Population initialization method, default random
-        selection: Selection method, default stochastic universal sampling
+        selection: Selection method, default roulette wheel selection (rws) 
         crossover: Crossover method, default two part crossover (tcx)
         mutation: Mutation method, default inverse mutation
         pc: Probability of crossover, default 0.4
@@ -22,7 +22,7 @@ class GeneticAlgorithm:
             objective_func='flow_time',
             pop_size=100, 
             pop_init='random',
-            selection='sus',
+            selection='rws',
             crossover='tcx', 
             mutation='inverse', 
             pc=0.4, 
@@ -66,7 +66,7 @@ class GeneticAlgorithm:
         valid_params = {
             'objective_func': {'makespan', 'flow_time'},
             'pop_init'      : {'random'},
-            'selection'     : {'sus'},
+            'selection'     : {'rws'},
             'crossover'     : {'tcx'},
             'mutation'      : {'inverse'},
             'replacement'   : {'none'}
@@ -210,6 +210,38 @@ class GeneticAlgorithm:
         return chromosome
 
     '''
+    **Selection functions**
+    '''
+
+    '''Wrapper function for selection 
+
+    Params:
+        pop: The population that is being selected from
+
+    Returns:
+        Two parents, as a pair.
+    '''
+    def __selection(self, pop):
+        method = self.selection
+        # list of current selection methods
+        selection_methods= {
+            'rws' : self.__roulette_wheel_selection
+        }
+        return selection_methods[method](pop)
+
+    '''
+    Performs roulette wheel selection, or fitness proportionate selection.
+
+    Params:
+        pop: The population being picked from
+
+    Returns:
+        Two parents, as a pair.
+    '''
+    def __roulette_wheel_selection(self, pop):
+        return 0
+
+    '''
     **Crossover functions**
     '''
 
@@ -229,7 +261,6 @@ class GeneticAlgorithm:
             'tcx' : self.__two_part_crossover
         }
         return xover_methods[method](p1, p2)
-
 
     '''
     Helper function that serves as the implementation for TCX. Produces one 
@@ -466,10 +497,10 @@ class GeneticAlgorithm:
     Determines the fitness of the individual. Currently, our metric is 
         sum of distances between robot and task, with the goal of minimization.
 
-    Params
+    Params:
         chromosome: The candidate solution
 
-    Returns
+    Returns:
         The fitness, which is simply the sum of the distances between the 
             robots and their tasks.
     '''
@@ -485,7 +516,7 @@ class GeneticAlgorithm:
     Helper function for fitness. An objective function that measures the 
         average length of all the agents' paths.
 
-    Params
+    Params:
         chromosome: The candidate solution
 
     Returns
@@ -564,10 +595,10 @@ class GeneticAlgorithm:
     Helper function for fitness. An objective function that measures the 
         longest path length out of all the agents' paths.
 
-    Params
+    Params:
         chromosome: The candidate solution
 
-    Returns
+    Returns:
         The longest path length out of all the agents' paths.
     '''
     def __makespan(self, chromosome):
