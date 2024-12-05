@@ -242,10 +242,47 @@ class GeneticAlgorithm:
         pop: The population being picked from
 
     Returns:
-        Two parents, as a pair.
+        The parents from the mating pool.
     '''
     def __roulette_wheel_selection(self, pop):
-        return 0
+        # TODO (move this out so we only do this once) calculate fitness of the pop
+        pop_fitness = [0] * len(pop)
+        for i in range(len(pop)):
+            pop_fitness[i] = self.__fitness(pop[i])
+
+        # sort population by fitness
+        pop_fitness, pop = self.__sort_parallel_lists(pop_fitness, pop)
+
+        # calculate cumulative probability distribution
+        cpd = np.cumsum(pop_fitness)
+        cpd = cpd / cpd[-1]
+
+        # spin wheel lambda times to get that many members for the mating pool
+        # TODO hardcode lambda? or make it some proportion of pop?
+        lam = 10
+        curr_member = 0
+        mating_pool = [0] * lam
+        while curr_member < lam:
+            r = np.random.rand()
+            i = 0
+            while cpd[i] < r:
+                i += 1
+            mating_pool[curr_member] = pop[i]
+            curr_member += 1
+        return mating_pool 
+
+    '''
+    Helper function that sorts two equal-sized lists according to the first list
+
+    Params:
+        l1: The first list, which will be the basis for sorting the second list
+        l2: The second list
+
+    Returns:
+        The two lists, both sorted according to the first list.
+    '''
+    def __sort_parallel_lists(self, l1, l2):
+        return zip(*sorted(list(zip(l1, l2)), key=lambda x: x[0]))
 
     '''
     **Crossover functions**
