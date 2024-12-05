@@ -8,7 +8,7 @@ class ConstructorTest(unittest.TestCase):
     '''
     def test_init(self):
         ga = GeneticAlgorithm()
-        actual = ga.get_parameters()
+        actual = ga.get_params()
         expected = {
             'objective_func':'flow_time',
             'pop_size' : 100,
@@ -24,7 +24,7 @@ class ConstructorTest(unittest.TestCase):
    
     def test_valid_parameters(self):
         ga = GeneticAlgorithm(pop_size=1000, pc=0.1, pm=0.3)
-        actual = ga.get_parameters()
+        actual = ga.get_params()
         expected = {
             'objective_func':'flow_time',
             'pop_size' : 1000,
@@ -58,3 +58,16 @@ class ConstructorTest(unittest.TestCase):
 
     def test_invalid_objective_func_parameter(self):
         self.assertRaises(ValueError, GeneticAlgorithm, objective_func='buh')
+
+    def test_all_valid_params(self):
+        expected = {
+            'objective_func': {'makespan', 'flow_time'},
+            'pop_init'      : {'random'},
+            'selection'     : {'rws'},
+            'crossover'     : {'tcx'},
+            'mutation'      : {'inverse'},
+            'replacement'   : {'none'}
+        }  
+
+        actual = GeneticAlgorithm().get_valid_params()
+        self.assertEqual(actual, expected)

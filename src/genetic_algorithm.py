@@ -30,6 +30,16 @@ class GeneticAlgorithm:
             replacement='none',
             env=None
     ):
+        # dictionary of valid parameters
+        self.valid_params = {
+            'objective_func': {'makespan', 'flow_time'},
+            'pop_init'      : {'random'},
+            'selection'     : {'rws'},
+            'crossover'     : {'tcx'},
+            'mutation'      : {'inverse'},
+            'replacement'   : {'none'}
+        }   
+
         # check parameters
         self.__validate_params(
             objective_func,
@@ -62,38 +72,28 @@ class GeneticAlgorithm:
         selection, crossover, mutation, pc, pm, 
         replacement
     ):
-        # dictionary of valid parameters
-        valid_params = {
-            'objective_func': {'makespan', 'flow_time'},
-            'pop_init'      : {'random'},
-            'selection'     : {'rws'},
-            'crossover'     : {'tcx'},
-            'mutation'      : {'inverse'},
-            'replacement'   : {'none'}
-        }
-
         # limit pop size to [1, 100000]
         if not 1 <= pop_size <= 100000:
             raise ValueError(f"pop_size should be in the range [1, 100000]")
 
         # ensure valid methods
-        if objective_func not in valid_params['objective_func']:
+        if objective_func not in self.valid_params['objective_func']:
             method = "Objective function"
             err_msg = f"{method} method \'{objective_func}\' is not defined"
             raise ValueError(err_msg)
-        if pop_init not in valid_params['pop_init']:
+        if pop_init not in self.valid_params['pop_init']:
             method = "Population initialization"
             raise ValueError(f"{method} method \'{pop_init}\' is not defined")
-        if selection not in valid_params['selection']:
+        if selection not in self.valid_params['selection']:
             method = "Selection"
             raise ValueError(f"{method} method \'{selection}\' is not defined")
-        if crossover not in valid_params['crossover']: 
+        if crossover not in self.valid_params['crossover']: 
             method = "Crossover"
             raise ValueError(f"{method} method \'{crossover}\' is not defined")
-        if mutation not in valid_params['mutation']:
+        if mutation not in self.valid_params['mutation']:
             method = "Mutation"
             raise ValueError(f"{method} method \'{mutation}\' is not defined")
-        if replacement not in valid_params['replacement']:
+        if replacement not in self.valid_params['replacement']:
             method = "Replacement"
             err_msg = f"{method} method \'{replacement}\' is not defined"
             raise ValueError(err_msg)
@@ -108,7 +108,7 @@ class GeneticAlgorithm:
     Returns: The current parameter setup of the genetic algorithm as a 
         dictionary.
     '''
-    def get_parameters(self):
+    def get_params(self):
         return {
             'objective_func': self.objective_func,
             'pop_size'      : self.pop_size,
@@ -120,6 +120,12 @@ class GeneticAlgorithm:
             'pm'            : self.pm,
             'replacement'   : self.replacement
         }
+
+    '''
+    Returns: All of the possible valid parameters, as a dictionary
+    '''
+    def get_valid_params(self):
+        return self.valid_params
 
     '''
     Runs the genetic algorithm with the defined parameters
