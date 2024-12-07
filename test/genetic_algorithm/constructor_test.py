@@ -18,7 +18,7 @@ class ConstructorTest(unittest.TestCase):
             'mutation' : 'inverse',
             'pc' : 0.4,
             'pm' : 0.6,
-            'replacement' : 'none' 
+            'replacement' : 'replace_worst' 
         }
         self.assertEqual(actual, expected)
    
@@ -34,7 +34,7 @@ class ConstructorTest(unittest.TestCase):
             'mutation' : 'inverse',
             'pc' : 0.1,
             'pm' : 0.3,
-            'replacement' : 'none'
+            'replacement' : 'replace_worst'
         }
         self.assertEqual(actual, expected)
 
@@ -71,7 +71,7 @@ class ConstructorTest(unittest.TestCase):
             'selection'     : {'rws'},
             'crossover'     : {'tcx'},
             'mutation'      : {'inverse'},
-            'replacement'   : {'none'}
+            'replacement'   : {'replace_worst'}
         }  
 
         actual = GeneticAlgorithm().get_valid_params()

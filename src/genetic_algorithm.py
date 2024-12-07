@@ -15,7 +15,7 @@ class GeneticAlgorithm:
         mutation: Mutation method, default inverse mutation
         pc: Probability of crossover, default 0.4
         pm: Probability of mutation, default 0.6
-        replacement: Replacement method, default none
+        replacement: Replacement method, default replace_worst 
     '''
     def __init__(
             self, 
@@ -27,7 +27,7 @@ class GeneticAlgorithm:
             mutation='inverse', 
             pc=0.4, 
             pm=0.6,
-            replacement='none',
+            replacement='replace_worst',
             env=None
     ):
         # dictionary of valid parameters
@@ -37,7 +37,7 @@ class GeneticAlgorithm:
             'selection'     : {'rws'},
             'crossover'     : {'tcx'},
             'mutation'      : {'inverse'},
-            'replacement'   : {'none'}
+            'replacement'   : {'replace_worst'}
         }   
 
         # check parameters
@@ -282,7 +282,6 @@ class GeneticAlgorithm:
         cpd = cpd / cpd[-1]
 
         # spin wheel lambda times to get that many members for the mating pool
-        # TODO hardcode lambda? or make it some proportion of pop?
         lam = mating_pool_size
         curr_member = 0
         mating_pool = [0] * lam
@@ -307,6 +306,43 @@ class GeneticAlgorithm:
     '''
     def __sort_parallel_lists(self, l1, l2):
         return zip(*sorted(list(zip(l1, l2)), key=lambda x: x[0]))
+
+    '''
+    **Replacement functions**
+    '''
+
+    '''Wrapper function for replacement 
+    For the experiment, the number individuals replaced is predetermined.
+
+    Params:
+        pop: The population that will be culled. Should already contain 
+            children from mating; (population = mu + lambda)
+
+    Returns:
+        The population, with lambda individuals removed
+    '''
+    def __replacement(self, pop):
+        method = self.replacement
+        # list of current replacement methods
+        replacement_methods= {
+            'replace_worst' : self.__replace_worst
+        }
+        lmbda = self.__get_lambda(len(pop))
+        return replacement_methods[method](pop, lmbda)
+
+    '''
+    Helper function for replacement that removes the lamda worst individuals 
+        in the population.
+
+    Params:
+        pop: The population that will have individuals removed 
+        lmbda: The number of individuals that will be removed
+
+    Returns:
+        The population, with lambda individuals removed.
+    '''
+    def __replace_worst(self, pop, lmbda):
+        return []
 
     '''
     **Crossover functions**
