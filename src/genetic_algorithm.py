@@ -73,8 +73,8 @@ class GeneticAlgorithm:
         replacement
     ):
         # limit pop size to [1, 100000]
-        if not 1 <= pop_size <= 100000:
-            raise ValueError(f"pop_size should be in the range [1, 100000]")
+        if not 10 <= pop_size <= 100000:
+            raise ValueError(f"pop_size should be in the range [10, 100000]")
 
         # ensure valid methods
         if objective_func not in self.valid_params['objective_func']:

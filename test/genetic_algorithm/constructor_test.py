@@ -38,8 +38,13 @@ class ConstructorTest(unittest.TestCase):
         }
         self.assertEqual(actual, expected)
 
-    def test_invalid_pop_size_parameter(self):
-        self.assertRaises(ValueError, GeneticAlgorithm, pop_size=0)
+    def test_pop_size_past_max(self):
+        self.assertRaises(ValueError, GeneticAlgorithm, pop_size=1000000)
+        ga = GeneticAlgorithm
+
+    def test_pop_size_past_min(self):
+        self.assertRaises(ValueError, GeneticAlgorithm, pop_size=1)
+        ga = GeneticAlgorithm
 
     def test_invalid_pc_parameter(self):
         self.assertRaises(ValueError, GeneticAlgorithm, pc=-1.0)
