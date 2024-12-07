@@ -342,7 +342,16 @@ class GeneticAlgorithm:
         The population, with lambda individuals removed.
     '''
     def __replace_worst(self, pop, lmbda):
-        return []
+        # TODO pull this out? get fitnesses of the pop
+        pop_fitness = [0] * len(pop)
+        for i in range(len(pop)):
+            pop_fitness[i] = self.__fitness(pop[i])
+
+        # sort population by fitness
+        pop_fitness, pop = self.__sort_parallel_lists(pop_fitness, pop)
+
+        # fitness sorted from less fit -> most fit, so drop front end 
+        return pop[lmbda:]
 
     '''
     **Crossover functions**
