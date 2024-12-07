@@ -27,3 +27,19 @@ class SelectionTest(unittest.TestCase):
         ]
 
         self.assertTrue(np.array_equal(actual, expected))
+
+    def test_lambda_normal(self):
+        ga = GeneticAlgorithm()
+        actual = ga._GeneticAlgorithm__get_lambda(
+            pop_size=100, mating_pool_prop=0.2
+        )
+        expected = 20
+        self.assertEqual(actual, expected)
+
+    def test_lambda_floor(self):
+        ga = GeneticAlgorithm()
+        actual = ga._GeneticAlgorithm__get_lambda(
+            pop_size=10, mating_pool_prop=0.1
+        )
+        expected = 2
+        self.assertEqual(actual, expected)

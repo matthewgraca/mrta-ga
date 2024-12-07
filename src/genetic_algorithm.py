@@ -220,6 +220,7 @@ class GeneticAlgorithm:
     '''
 
     '''Wrapper function for selection 
+    For the experiment, the number of children is predetermined.
 
     Params:
         pop: The population that is being selected from
@@ -233,18 +234,41 @@ class GeneticAlgorithm:
         selection_methods= {
             'rws' : self.__roulette_wheel_selection
         }
-        return selection_methods[method](pop)
+        mating_pool_size = self.__get_lambda(len(pop))
+        return selection_methods[method](pop, mating_pool_size)
+
+    '''
+    Helper function for population selection and replacement that determines 
+        how many individuals need to be selected or replaced from the 
+        population. Currently, the number is guaranteed to be at least 2.
+
+    Params:
+        pop_size: The size of the population
+        mating_pool_prop: The proportion of the population that will be 
+            selected for the mating pool or selected for replacement. Default 
+            set to 0.2 (20%).
+
+    Returns:
+        The number of individuals that will be selected for selection or 
+            replacement.
+    '''
+    def __get_lambda(self, pop_size, mating_pool_prop=0.2):
+        a = int(pop_size * mating_pool_prop)
+        b = a if a % 2 == 0 else a - 1  # ensure even to pair all parents
+        c = b if b >= 2 else 2          # ensure there are at least 2 parents
+        return c
 
     '''
     Performs roulette wheel selection, or fitness proportionate selection.
 
     Params:
         pop: The population being picked from
+        mating_pool_size: Lambda, the size of the mating pool
 
     Returns:
         The parents from the mating pool.
     '''
-    def __roulette_wheel_selection(self, pop):
+    def __roulette_wheel_selection(self, pop, mating_pool_size):
         # TODO (move this out so we only do this once) calculate fitness of the pop
         pop_fitness = [0] * len(pop)
         for i in range(len(pop)):
@@ -259,7 +283,7 @@ class GeneticAlgorithm:
 
         # spin wheel lambda times to get that many members for the mating pool
         # TODO hardcode lambda? or make it some proportion of pop?
-        lam = 10
+        lam = mating_pool_size
         curr_member = 0
         mating_pool = [0] * lam
         while curr_member < lam:
