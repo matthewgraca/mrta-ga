@@ -19,9 +19,7 @@ class ReplacementTest(unittest.TestCase):
             pop_fitness[i] = ga._GeneticAlgorithm__fitness(pop[i])
 
         # sort population by fitness
-        pop_fitness, pop = ga._GeneticAlgorithm__sort_parallel_lists(
-            pop_fitness, pop
-        )
+        pop_fitness, pop = ga._GeneticAlgorithm__sort_pop_by_fitness(pop)
         
         # 20% hardcoded, so only 40 should remain
         actual = ga._GeneticAlgorithm__replacement(pop)

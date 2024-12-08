@@ -131,23 +131,43 @@ class GeneticAlgorithm:
     Runs the genetic algorithm with the defined parameters
     '''
     def run(self):
-        tasks, robots = 9, 3
         # initialization
-        pop = self.__pop_init(self.pop_size, tasks, robots)
-        '''
-        # parent selection
-        p1, p2 = self.parent_selection(method=self.selection, population=pop)
-        '''
-        # crossover
-        c1, c2 = self.__crossover(p1, p2, tasks, robots)
-        # mutation
-        c1 = self.mutation(c1, tasks, robots)
-        c2 = self.mutation(c2, tasks, robots)
-        '''
-        # replacement
-        pop = self.replacement(method=self.replacement, pop=pop, c1=c1, c2=c2)
-        # termination
-        '''
+        pop = self.__pop_init(self.pop_size)
+        print(pop[0], self.__fitness(pop[0]))
+
+        # termination condition
+        max_generations = 10 
+        for generation in range(max_generations):
+            # select a mating pool from the population
+            mating_pool = self.__selection(pop)
+            while mating_pool:
+                # parent selection
+                p1, p2 = mating_pool.pop(), mating_pool.pop()
+
+                # crossover
+                c1, c2 = self.__crossover(p1, p2)
+
+                # mutation
+                c1 = self.__mutation(c1)
+                c2 = self.__mutation(c2)
+
+                # add children to the population
+                pop.append(c1)
+                pop.append(c2)
+
+            # replacement
+            pop = self.__replacement(pop)
+            '''
+            for a in pop:
+                print(a)
+            print()
+            '''
+        
+        # results
+        pop, fits = self.__sort_pop_by_fitness(pop)
+        best_individual = pop[-1]
+        best_fit = fits[-1] 
+        print(best_individual, best_fit)
 
     '''
     **Population initialization functions**
@@ -226,7 +246,7 @@ class GeneticAlgorithm:
         pop: The population that is being selected from
 
     Returns:
-        Two parents, as a pair.
+        A list containing the mating pool.
     '''
     def __selection(self, pop):
         method = self.selection
@@ -270,12 +290,7 @@ class GeneticAlgorithm:
     '''
     def __roulette_wheel_selection(self, pop, mating_pool_size):
         # TODO (move this out so we only do this once) calculate fitness of the pop
-        pop_fitness = [0] * len(pop)
-        for i in range(len(pop)):
-            pop_fitness[i] = self.__fitness(pop[i])
-
-        # sort population by fitness
-        pop_fitness, pop = self.__sort_parallel_lists(pop_fitness, pop)
+        pop_fitness, pop = self.__sort_pop_by_fitness(pop)
 
         # calculate cumulative probability distribution
         cpd = np.cumsum(pop_fitness)
@@ -295,17 +310,30 @@ class GeneticAlgorithm:
         return mating_pool 
 
     '''
-    Helper function that sorts two equal-sized lists according to the first list
+    Helper function that sorts the population by fitness
 
     Params:
-        l1: The first list, which will be the basis for sorting the second list
-        l2: The second list
+        pop: The population being sorted
 
     Returns:
-        The two lists, both sorted according to the first list.
+        Two lists; the first being the list of the fitnesses of the 
+            population and the second being the list of individuals, sorted 
+            by fitness.
     '''
-    def __sort_parallel_lists(self, l1, l2):
-        return zip(*sorted(list(zip(l1, l2)), key=lambda x: x[0]))
+    def __sort_pop_by_fitness(self, pop):
+        # get the fitness of each individual
+        pop_fitness = [0] * len(pop)
+        for i in range(len(pop)):
+            pop_fitness[i] = self.__fitness(pop[i])
+
+        # sort population by fitness
+        # zip fit and pop together, then sort, then unzip
+        a, b = zip(*sorted(zip(pop_fitness, pop), key=lambda x: x[0]))
+        # then convert tuple list to list
+        pop_fitness, pop = list(a), list(b) 
+
+        return pop_fitness, pop 
+
 
     '''
     **Replacement functions**
@@ -343,12 +371,8 @@ class GeneticAlgorithm:
     '''
     def __replace_worst(self, pop, lmbda):
         # TODO pull this out? get fitnesses of the pop
-        pop_fitness = [0] * len(pop)
-        for i in range(len(pop)):
-            pop_fitness[i] = self.__fitness(pop[i])
-
         # sort population by fitness
-        pop_fitness, pop = self.__sort_parallel_lists(pop_fitness, pop)
+        pop_fitness, pop = self.__sort_pop_by_fitness(pop)
 
         # fitness sorted from less fit -> most fit, so drop front end 
         return pop[lmbda:]
