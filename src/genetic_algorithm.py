@@ -133,13 +133,14 @@ class GeneticAlgorithm:
     def run(self):
         # initialization
         pop = self.__pop_init(self.pop_size)
-        print(pop[0], self.__fitness(pop[0]))
+        pop_fits, pop = self.__sort_pop_by_fitness(pop)
+        print(pop[-1], self.__fitness(pop[-1]))
 
         # termination condition
-        max_generations = 10 
+        max_generations = 100
         for generation in range(max_generations):
             # select a mating pool from the population
-            mating_pool = self.__selection(pop)
+            mating_pool = self.__selection(pop, pop_fits)
             while mating_pool:
                 # parent selection
                 p1, p2 = mating_pool.pop(), mating_pool.pop()
@@ -151,23 +152,25 @@ class GeneticAlgorithm:
                 c1 = self.__mutation(c1)
                 c2 = self.__mutation(c2)
 
+                # fitness calcs
+                c1_fit = self.__fitness(c1)
+                c2_fit = self.__fitness(c2)
+
                 # add children to the population
-                pop.append(c1)
-                pop.append(c2)
+                pop = np.append(pop, [c1, c2], axis=0)
+                pop_fits = np.append(pop_fits, [c1_fit, c2_fit])
 
             # replacement
-            pop = self.__replacement(pop)
-            '''
-            for a in pop:
-                print(a)
-            print()
-            '''
+            pop_fits, pop = self.__replacement(pop, pop_fits)
+
+            # results
+            best, worst = pop[-1], pop[0]
+            best_fit, worst_fit = self.__fitness(best), self.__fitness(worst)
+            print(f'Generation: {generation}, Best solution:  {best}, Best fitness:  {best_fit}')
+            print(f'Generation: {generation}, Worst solution: {worst}, Worst fitness: {worst_fit}')
+            print(f'Average fitness: {np.average(pop_fits)}')
         
-        # results
-        pop, fits = self.__sort_pop_by_fitness(pop)
-        best_individual = pop[-1]
-        best_fit = fits[-1] 
-        print(best_individual, best_fit)
+        return
 
     '''
     **Population initialization functions**
@@ -244,18 +247,19 @@ class GeneticAlgorithm:
 
     Params:
         pop: The population that is being selected from
+        pop_fit: The population fitnesses
 
     Returns:
         A list containing the mating pool.
     '''
-    def __selection(self, pop):
+    def __selection(self, pop, pop_fit):
         method = self.selection
         # list of current selection methods
         selection_methods= {
             'rws' : self.__roulette_wheel_selection
         }
         mating_pool_size = self.__get_lambda(len(pop))
-        return selection_methods[method](pop, mating_pool_size)
+        return selection_methods[method](pop, pop_fit, mating_pool_size)
 
     '''
     Helper function for population selection and replacement that determines 
@@ -283,14 +287,15 @@ class GeneticAlgorithm:
 
     Params:
         pop: The population being picked from
+        pop_fit: The fitnesses of the population
         mating_pool_size: Lambda, the size of the mating pool
 
     Returns:
         The parents from the mating pool.
     '''
-    def __roulette_wheel_selection(self, pop, mating_pool_size):
-        # TODO (move this out so we only do this once) calculate fitness of the pop
-        pop_fitness, pop = self.__sort_pop_by_fitness(pop)
+    def __roulette_wheel_selection(self, pop, pop_fit, mating_pool_size):
+        # sort by fitness
+        pop_fitness, pop = self.__sort_a_and_b_by_a(pop_fit, pop)
 
         # calculate cumulative probability distribution
         cpd = np.cumsum(pop_fitness)
@@ -327,13 +332,28 @@ class GeneticAlgorithm:
             pop_fitness[i] = self.__fitness(pop[i])
 
         # sort population by fitness
-        # zip fit and pop together, then sort, then unzip
-        a, b = zip(*sorted(zip(pop_fitness, pop), key=lambda x: x[0]))
-        # then convert tuple list to list
-        pop_fitness, pop = list(a), list(b) 
+        # zip fit and pop together, then sort, then unzip, then convert to lists
+        pop_fitness, pop  = (np.array(t) for t in 
+            zip(*sorted(zip(pop_fitness, pop), key=lambda x: x[0]))
+        )
 
-        return pop_fitness, pop 
+        return pop_fitness, pop
+    '''
+    Helper function that sorts a list by the other. Used when the fitnesses 
+        have already been calculated
 
+    Params:
+        l1: The first list being sorted, according to itself 
+        l2: The second list, sorted according to l1
+    Returns:
+        Two lists; l1, sorted by itself, and l2, sorted by l1
+    '''
+    def __sort_a_and_b_by_a(self, a, b):
+        a, b = (np.array(t) for t in 
+            zip(*sorted(zip(a, b), key=lambda x: x[0]))
+        )
+        
+        return a, b
 
     '''
     **Replacement functions**
@@ -345,18 +365,19 @@ class GeneticAlgorithm:
     Params:
         pop: The population that will be culled. Should already contain 
             children from mating; (population = mu + lambda)
+        pop_fit: The fitnesses of the population
 
     Returns:
         The population, with lambda individuals removed
     '''
-    def __replacement(self, pop):
+    def __replacement(self, pop, pop_fit):
         method = self.replacement
         # list of current replacement methods
         replacement_methods= {
             'replace_worst' : self.__replace_worst
         }
         lmbda = self.__get_lambda(len(pop))
-        return replacement_methods[method](pop, lmbda)
+        return replacement_methods[method](pop, pop_fit, lmbda)
 
     '''
     Helper function for replacement that removes the lamda worst individuals 
@@ -364,18 +385,20 @@ class GeneticAlgorithm:
 
     Params:
         pop: The population that will have individuals removed 
+        pop_fit: The fitnesses of the population
         lmbda: The number of individuals that will be removed
 
     Returns:
         The population, with lambda individuals removed.
     '''
-    def __replace_worst(self, pop, lmbda):
-        # TODO pull this out? get fitnesses of the pop
+    def __replace_worst(self, pop, pop_fit, lmbda):
         # sort population by fitness
-        pop_fitness, pop = self.__sort_pop_by_fitness(pop)
+        pop_fitness, pop = self.__sort_a_and_b_by_a(pop_fit, pop)
 
         # fitness sorted from less fit -> most fit, so drop front end 
-        return pop[lmbda:]
+        next_gen_fits, next_gen = pop_fitness[lmbda:], pop[lmbda:]
+
+        return next_gen_fits, next_gen
 
     '''
     **Crossover functions**

@@ -11,8 +11,9 @@ class SelectionTest(unittest.TestCase):
         )
         ga = GeneticAlgorithm(pop_init='random', selection='rws', env=env)
         pop = ga._GeneticAlgorithm__pop_init(50)
+        pop_fit, pop = ga._GeneticAlgorithm__sort_pop_by_fitness(pop)
         
-        actual = ga._GeneticAlgorithm__selection(pop)
+        actual = ga._GeneticAlgorithm__selection(pop, pop_fit)
         expected = [
             [ 3,  5,  2,  4,  6, 12,  1, 11, 10,  9,  8,  7,  4,  7,  1], 
             [ 8,  3,  5, 12,  7,  4, 11, 10,  2,  9,  1,  6,  5,  1,  6], 

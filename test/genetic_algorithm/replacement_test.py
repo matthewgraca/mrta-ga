@@ -13,16 +13,11 @@ class ReplacementTest(unittest.TestCase):
         ga = GeneticAlgorithm(replacement='replace_worst', env=env)
         pop = ga._GeneticAlgorithm__pop_init(50)
 
-        # get fitness of pop
-        pop_fitness = [0] * len(pop)
-        for i in range(len(pop)):
-            pop_fitness[i] = ga._GeneticAlgorithm__fitness(pop[i])
-
         # sort population by fitness
         pop_fitness, pop = ga._GeneticAlgorithm__sort_pop_by_fitness(pop)
         
         # 20% hardcoded, so only 40 should remain
-        actual = ga._GeneticAlgorithm__replacement(pop)
+        actual = ga._GeneticAlgorithm__replacement(pop, pop_fitness)
         expected = pop[10:]
         self.assertTrue(np.array_equal(actual, expected))
 
