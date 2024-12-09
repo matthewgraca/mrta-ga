@@ -129,16 +129,19 @@ class GeneticAlgorithm:
 
     '''
     Runs the genetic algorithm with the defined parameters
+
+    Params:
+        generations: The number of generations to run the experiment
+        update_step: The number of generations before each update
     '''
-    def run(self):
+    def run(self, generations=100, update_step=1):
         # initialization
         pop = self.__pop_init(self.pop_size)
         pop_fits = self.__fitness_of_pop(pop)
         pop_fits, pop = self.__sort_pop_by_fitness(pop_fits, pop)
 
         # termination condition
-        max_generations = 100
-        for generation in range(max_generations):
+        for gen in range(generations):
             # select a mating pool from the population
             mating_pool = self.__selection(pop, pop_fits)
             while mating_pool:
@@ -146,11 +149,14 @@ class GeneticAlgorithm:
                 p1, p2 = mating_pool.pop(), mating_pool.pop()
 
                 # crossover
-                c1, c2 = self.__crossover(p1, p2)
+                if self.pc < np.random.rand():
+                    c1, c2 = self.__crossover(p1, p2)
+                else:
+                    c1, c2 = p1, p2
 
                 # mutation
-                c1 = self.__mutation(c1)
-                c2 = self.__mutation(c2)
+                c1 = self.__mutation(c1) if self.pm < np.random.rand() else c1
+                c2 = self.__mutation(c2) if self.pm < np.random.rand() else c2
 
                 # fitness calcs
                 c1_fit = self.__fitness(c1)
@@ -166,9 +172,10 @@ class GeneticAlgorithm:
             # results
             best, worst = pop[-1], pop[0]
             best_fit, worst_fit = self.__fitness(best), self.__fitness(worst)
-            print(f'Generation: {generation}, Best solution:  {best}, Best fitness:  {best_fit}')
-            print(f'Generation: {generation}, Worst solution: {worst}, Worst fitness: {worst_fit}')
-            print(f'Average fitness: {np.average(pop_fits)}')
+            if (gen + 1) % update_step == 0:
+                print(f'Generation: {gen}, Best solution:  {best}, Best fitness:  {best_fit}')
+                print(f'Generation: {gen}, Worst solution: {worst}, Worst fitness: {worst_fit}')
+                print(f'Average fitness: {np.average(pop_fits)}')
 
         print("Best path of the robots --")
         best_path = self.__fitness_get_all_subtours(best)

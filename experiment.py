@@ -6,8 +6,11 @@ def main():
     # TODO potentially have map seeded with initial robot locations
     np.random.seed(0)
     env = EnvironmentInitializer(robots=3, tasks=10, robot_loc=[(3, 8), (5, 3), (20, 19)])
-    ga = GeneticAlgorithm(pop_size=100, env=env)
-    ga.run()
+    ga = GeneticAlgorithm(pop_size=100, pc=0.85, pm= 0.01, env=env)
+    print(ga.get_params())
+    generations = 100
+    update_step = generations // 10
+    ga.run(generations, update_step)
 
 if __name__=='__main__':
     main()
