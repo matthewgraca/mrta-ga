@@ -133,8 +133,9 @@ class GeneticAlgorithm:
     def run(self):
         # initialization
         pop = self.__pop_init(self.pop_size)
-        pop_fits, pop = self.__sort_pop_by_fitness(pop)
-        print(pop[-1], self.__fitness(pop[-1]))
+        pop_fits = self.__fitness_of_pop(pop)
+        pop_fits, pop = self.__sort_pop_by_fitness(pop_fits, pop)
+        print(pop[-1], pop_fits[-1])
 
         # termination condition
         max_generations = 100
@@ -295,7 +296,7 @@ class GeneticAlgorithm:
     '''
     def __roulette_wheel_selection(self, pop, pop_fit, mating_pool_size):
         # sort by fitness
-        pop_fitness, pop = self.__sort_a_and_b_by_a(pop_fit, pop)
+        pop_fitness, pop = self.__sort_pop_by_fitness(pop_fit, pop)
 
         # calculate cumulative probability distribution
         cpd = np.cumsum(pop_fitness)
@@ -315,45 +316,21 @@ class GeneticAlgorithm:
         return mating_pool 
 
     '''
-    Helper function that sorts the population by fitness
-
-    Params:
-        pop: The population being sorted
-
-    Returns:
-        Two lists; the first being the list of the fitnesses of the 
-            population and the second being the list of individuals, sorted 
-            by fitness.
-    '''
-    def __sort_pop_by_fitness(self, pop):
-        # get the fitness of each individual
-        pop_fitness = [0] * len(pop)
-        for i in range(len(pop)):
-            pop_fitness[i] = self.__fitness(pop[i])
-
-        # sort population by fitness
-        # zip fit and pop together, then sort, then unzip, then convert to lists
-        pop_fitness, pop  = (np.array(t) for t in 
-            zip(*sorted(zip(pop_fitness, pop), key=lambda x: x[0]))
-        )
-
-        return pop_fitness, pop
-    '''
     Helper function that sorts a list by the other. Used when the fitnesses 
         have already been calculated
 
     Params:
-        l1: The first list being sorted, according to itself 
-        l2: The second list, sorted according to l1
+        fits: The first list being sorted, according to itself 
+        pop: The second list, sorted according to fits 
     Returns:
-        Two lists; l1, sorted by itself, and l2, sorted by l1
+        Two lists; fits, sorted by itself, and pop, sorted by fits 
     '''
-    def __sort_a_and_b_by_a(self, a, b):
-        a, b = (np.array(t) for t in 
-            zip(*sorted(zip(a, b), key=lambda x: x[0]))
+    def __sort_pop_by_fitness(self, fits, pop):
+        fits, pop = (np.array(t) for t in 
+            zip(*sorted(zip(fits, pop), key=lambda x: x[0]))
         )
         
-        return a, b
+        return fits, pop
 
     '''
     **Replacement functions**
@@ -393,7 +370,7 @@ class GeneticAlgorithm:
     '''
     def __replace_worst(self, pop, pop_fit, lmbda):
         # sort population by fitness
-        pop_fitness, pop = self.__sort_a_and_b_by_a(pop_fit, pop)
+        pop_fitness, pop = self.__sort_pop_by_fitness(pop_fit, pop)
 
         # fitness sorted from less fit -> most fit, so drop front end 
         next_gen_fits, next_gen = pop_fitness[lmbda:], pop[lmbda:]
@@ -653,8 +630,7 @@ class GeneticAlgorithm:
     '''
 
     '''
-    Determines the fitness of the individual. Currently, our metric is 
-        sum of distances between robot and task, with the goal of maximization.
+    Determines the fitness of the individual. 
 
     Params:
         chromosome: The candidate solution
@@ -669,6 +645,22 @@ class GeneticAlgorithm:
             'flow_time'     : self.__flow_time
         }
         return 1 / fitness_methods[method](chromosome)
+
+    '''
+    Determines the fitness of a given population. 
+
+    Params:
+        pop: The list of candidate solutions
+
+    Returns:
+        A list of the population's fitnesses. Larger is better.
+    '''
+    def __fitness_of_pop(self, pop):
+        pop_fit = [0] * len(pop)
+        for i in range(len(pop)):
+            pop_fit[i] = self.__fitness(pop[i])
+
+        return pop_fit
 
     '''
     Helper function for fitness. An objective function that measures the 
