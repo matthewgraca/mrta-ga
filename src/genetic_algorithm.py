@@ -135,7 +135,6 @@ class GeneticAlgorithm:
         pop = self.__pop_init(self.pop_size)
         pop_fits = self.__fitness_of_pop(pop)
         pop_fits, pop = self.__sort_pop_by_fitness(pop_fits, pop)
-        print(pop[-1], pop_fits[-1])
 
         # termination condition
         max_generations = 100
@@ -170,7 +169,12 @@ class GeneticAlgorithm:
             print(f'Generation: {generation}, Best solution:  {best}, Best fitness:  {best_fit}')
             print(f'Generation: {generation}, Worst solution: {worst}, Worst fitness: {worst_fit}')
             print(f'Average fitness: {np.average(pop_fits)}')
-        
+
+        print("Best path of the robots --")
+        best_path = self.__fitness_get_all_subtours(best)
+        for i in range(len(best_path)):
+            print(f'Path of robot {i+1}: {best_path[i]}')
+
         return
 
     '''
@@ -673,33 +677,11 @@ class GeneticAlgorithm:
         The average length of all the agents' paths.
     '''
     def __flow_time(self, chromosome):
-        tasks, robots = self.env.num_of_tasks(), self.env.num_of_robots()
-        robot_loc = self.env.get_robot_loc()
-        grid = self.env.get_grid()
-        task_list = self.env.get_task_list()
-
-        # TODO remove hardcoded task list?
-        # TODO pull grid up into constructor?
-        cut_task_list = [task_list[t] for t in list(islice(task_list, tasks))]
-
         # get the length of each robot's subtour
-        subtours = []
         path_len = 0
-        segment_idx = self.__get_subtour_start_indices_of(chromosome)
-        # go through each robot's subtour
-        for m in range(robots):
-            # subtour start-end indices
-            start = segment_idx[m]
-            end = start + chromosome[tasks + m]
-
-            # calculate subtour path taken by this robot
-            path = self.__fitness_get_subtour(
-                chromosome[start:end], robot_loc[m], cut_task_list
-            )
-
-            # append subtour to subtours list, and total path length of subtours
-            subtours.append(path)
-            path_len += len(path)
+        subtours = self.__fitness_get_all_subtours(chromosome)
+        for subtour in subtours:
+            path_len += len(subtour)
 
         return path_len / len(subtours)
 
@@ -742,6 +724,37 @@ class GeneticAlgorithm:
         return path 
 
     '''
+    Helper fitness function that calculates the paths of all the subtours.
+    
+    Params:
+        chromosome: The candidate solution
+        task_list: The list containing the coordinates of the tasks
+
+    Returns:
+        The paths taken by every robot to complete their subtours.
+    '''
+    def __fitness_get_all_subtours(self, chromosome):
+        robots = self.env.num_of_robots()
+        tasks = self.env.num_of_tasks()
+        robot_loc = self.env.get_robot_loc()
+        task_list = self.env.get_task_list()
+        cut_task_list = [task_list[t] for t in list(islice(task_list, tasks))]
+        segment_idx = self.__get_subtour_start_indices_of(chromosome)
+        all_paths = []
+
+        for m in range(robots):
+            # subtour start-end indices
+            start = segment_idx[m]
+            end = start + chromosome[tasks + m]
+
+            # calculate subtour path taken by this robot
+            path = self.__fitness_get_subtour(
+                chromosome[start:end], robot_loc[m], cut_task_list
+            )
+            all_paths.append(path.copy())
+        return all_paths
+
+    '''
     Helper function for fitness. An objective function that measures the 
         longest path length out of all the agents' paths.
 
@@ -752,29 +765,10 @@ class GeneticAlgorithm:
         The longest path length out of all the agents' paths.
     '''
     def __makespan(self, chromosome):
-        tasks, robots = self.env.num_of_tasks(), self.env.num_of_robots()
-        robot_loc = self.env.get_robot_loc()
-        grid = self.env.get_grid()
-        task_list = self.env.get_task_list()
-
-        cut_task_list = [task_list[t] for t in list(islice(task_list, tasks))]
-
-        # get the length of each robot's subtour
+        # get the max length of each robot's subtour
         max_path_len = 0
-        segment_idx = self.__get_subtour_start_indices_of(chromosome)
-
-        # go through each robot's subtour
-        for m in range(robots):
-            # subtour start-end indices
-            start = segment_idx[m]
-            end = start + chromosome[tasks + m]
-
-            # calculate subtour path taken by this robot
-            path = self.__fitness_get_subtour(
-                chromosome[start:end], robot_loc[m], cut_task_list
-            )
-
-            # update makespan if the current path is larger
-            max_path_len = max(max_path_len, len(path))
+        subtours = self.__fitness_get_all_subtours(chromosome)
+        for subtour in subtours:
+            max_path_len = max(max_path_len, len(subtour))
 
         return max_path_len
