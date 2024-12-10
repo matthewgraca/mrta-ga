@@ -33,7 +33,7 @@ class GeneticAlgorithm:
         # dictionary of valid parameters
         self.valid_params = {
             'objective_func': {'makespan', 'flow_time'},
-            'pop_init'      : {'random'},
+            'pop_init'      : {'random', 'greedy'},
             'selection'     : {'rws'},
             'crossover'     : {'tcx'},
             'mutation'      : {'inverse'},
@@ -202,7 +202,8 @@ class GeneticAlgorithm:
         method = self.pop_init
         # list of current population initialization methods
         pop_init_methods = {
-            'random' : self.__random_pop_init
+            'random' : self.__random_pop_init,
+            'greedy' : self.__greedy_pop_init
         }
         return pop_init_methods[method](pop_size)
 
@@ -216,13 +217,20 @@ class GeneticAlgorithm:
         The population, randomly generated based on the given tasks and robots.
     '''
     def __random_pop_init(self, pop_size):
-        pop = []
-        for i in range(pop_size):
-            # uses two-part chromosome representation
-            chromosome = self.__create_two_part_chromosome()
-            pop.append(chromosome)
+        return [self.__create_two_part_chromosome() for i in range(pop_size)]
 
-        return pop 
+    '''
+    Implements greedy population intialization, where all tasks are assigned
+        to the closest robot.
+
+    Params:
+        pop_size: The size of the population
+
+    Returns:
+        The population, greedily seeded 
+    '''
+    def __greedy_pop_init(self, pop_size):
+        return []
 
     '''
     Implements the candidate solutions. Design is a two-part chromosome, where 

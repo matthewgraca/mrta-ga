@@ -3,7 +3,6 @@ from src.environment_initializer import EnvironmentInitializer
 import numpy as np
 
 def main():
-    # TODO potentially have map seeded with initial robot locations
     np.random.seed(0)
     env = EnvironmentInitializer(robots=3, tasks=10)
     ga = GeneticAlgorithm(pop_size=100, pc=0.85, pm= 0.01, env=env)

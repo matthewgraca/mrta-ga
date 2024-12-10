@@ -67,7 +67,7 @@ class ConstructorTest(unittest.TestCase):
     def test_all_valid_params(self):
         expected = {
             'objective_func': {'makespan', 'flow_time'},
-            'pop_init'      : {'random'},
+            'pop_init'      : {'random', 'greedy'},
             'selection'     : {'rws'},
             'crossover'     : {'tcx'},
             'mutation'      : {'inverse'},

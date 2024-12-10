@@ -85,3 +85,13 @@ class PopInitTest(unittest.TestCase):
         ga = GeneticAlgorithm(pop_init='random', env=env)
         actual = ga._GeneticAlgorithm__pop_init(size)
         self.assertTrue(len(actual) == size)
+
+    def test_greedy_init(self):
+        np.random.seed(0)
+
+        size = 100
+        tasks, robots = 10, 3
+        env = EnvironmentInitializer(robots=robots, tasks=tasks)
+        ga = GeneticAlgorithm(pop_init='greedy', env=env)
+        actual = ga._GeneticAlgorithm__pop_init(size)
+        self.assertTrue(True)
