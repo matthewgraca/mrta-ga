@@ -36,7 +36,7 @@ class AStar:
 
     '''
     Determines if the given cell is blocked (invalid path)
-        We currently use '@' to denote a block, '.' for unblocked
+        We currently use '@' to denote a block.
 
     Params:
         row: The row index
@@ -46,7 +46,7 @@ class AStar:
         True if the cell is a valid path, false if not
     '''
     def is_unblocked(self, row, col):
-        return self.grid[row][col] == '.'
+        return self.grid[row][col] != '@'
 
     '''
     Determines if the given cell is the destination
@@ -120,6 +120,9 @@ class AStar:
     def a_star_search(self, src, dest):
         # run initial validity check for src and dest coordinates
         self.__initial_validity_check(src, dest)
+        r, c = src
+        if self.is_destination(r, c, dest):
+            return []
 
         # initialize list of visited cells
         closed_list = [
@@ -226,7 +229,9 @@ class AStar:
             raise ValueError("Source or the destination is blocked")
 
         # Check if we are already at the destination
+        '''
         if self.is_destination(src_x, src_y, dest):
             raise ValueError("Source is already at the destination")
+        '''
 
         return

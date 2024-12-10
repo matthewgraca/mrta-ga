@@ -102,7 +102,7 @@ class AStarTest(unittest.TestCase):
 
         self.assertRaises(ValueError, a.a_star_search, src, dest)
 
-    def test_invalid_path_src_is_dest(self):
+    def test_path_src_is_dest(self):
         grid = [
             ['.', '@', '.', '.', '.', '.', '@', '.', '.', '.'],
             ['.', '.', '.', '@', '.', '.', '.', '@', '.', '.'],
@@ -118,5 +118,7 @@ class AStarTest(unittest.TestCase):
         a = AStar(grid)
         src = [0, 0]
         dest = [0, 0]
-
-        self.assertRaises(ValueError, a.a_star_search, src, dest)
+        
+        actual = a.a_star_search(src, dest)
+        expected = []
+        self.assertEqual(actual, expected)

@@ -3,16 +3,16 @@ import json
 
 class EnvironmentInitializer():
     def __init__(self, 
-        robots, tasks, robot_loc=None, 
+        robots, tasks, 
         grid_path='maps/warehouse_small.txt', 
         task_path='maps/task_list.json'
     ):
         self.robots = robots        # number of agents
         self.tasks = tasks          # number of tasks
-        self.robot_loc = robot_loc  # initial locations of the agents
 
         self.grid = self.__access_grid(grid_path)
         self.task_list = self.__access_tasks(task_path)
+        self.robot_loc = self.__access_robot_loc() # initial locations of agents
 
     '''
     Accesses the list of tasks from a json file
@@ -59,6 +59,26 @@ class EnvironmentInitializer():
     def __access_grid(self, grid_path):
         # each character is a cell
         return np.genfromtxt(grid_path, dtype='str', delimiter=1)
+
+    '''
+    Reads the 2D grid, acquiring the first n robot locations, where n is the 
+        defined number of robots.
+
+    Params:
+        None
+
+    Returns:
+        A list of the initial robot locations.
+    '''
+    def __access_robot_loc(self):
+        init_locations = []
+        rows, cols = len(self.grid), len(self.grid[0])
+        for r in range(rows):
+            for c in range(cols):
+                if self.grid[r][c] == 'E':
+                    init_locations.append((r, c))
+
+        return init_locations[:self.robots]
 
     '''
     Getters
