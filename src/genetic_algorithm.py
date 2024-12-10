@@ -150,14 +150,14 @@ class GeneticAlgorithm:
                 p1, p2 = mating_pool.pop(), mating_pool.pop()
 
                 # crossover
-                if self.pc < np.random.rand():
+                if np.random.rand() < self.pc:
                     c1, c2 = self.__crossover(p1, p2)
                 else:
                     c1, c2 = p1, p2
 
                 # mutation
-                c1 = self.__mutation(c1) if self.pm < np.random.rand() else c1
-                c2 = self.__mutation(c2) if self.pm < np.random.rand() else c2
+                c1 = self.__mutation(c1) if np.random.rand() < self.pm else c1
+                c2 = self.__mutation(c2) if np.random.rand() < self.pm else c2
 
                 # fitness calcs
                 c1_fit = self.__fitness(c1, constraint=True)
