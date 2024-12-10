@@ -15,7 +15,8 @@ class EnvironmentInitializer():
         self.robot_loc = self.__access_robot_loc() # initial locations of agents
 
     '''
-    Accesses the list of tasks from a json file
+    Accesses the list of tasks from a json file, and stores them into a list 
+        of size n, where n is the number of tasks given.
     Format -- tasks: [id, release_time, [x1, y1, x2, y2]]
         - id : the id number of the task
         - release_time: the time when the task will be made available
@@ -26,8 +27,7 @@ class EnvironmentInitializer():
         None
 
     Returns:
-        The tasks using the formatting:
-            id : [(x1, y1), (x2, y2)], where id counts from 0
+        The tasks using the formatting: [(x1, y1), (x2, y2)] for each element.
     '''
     def __access_tasks(self, task_path):
         # read tasks json file
@@ -35,16 +35,16 @@ class EnvironmentInitializer():
             t = json.load(file)
 
         # remove release time, reformat as:
-        # id : [(x1, y1), (x2, y2)]
-        errands = {}
+        # [(x1, y1), x2, y2)]
+        errands = []
         for task_list in t.values():
             for details in task_list:
                 id_num, release_time, errand_coords = details
                 errand_src = errand_coords[0], errand_coords[1]
                 errand_dest = errand_coords[2], errand_coords[3]
-                errands[id_num] = [errand_src, errand_dest]
+                errands.append([errand_src, errand_dest])
 
-        return errands
+        return errands[:self.tasks]
 
     '''
     Reads the map into a 2D grid

@@ -1,7 +1,6 @@
 import numpy as np
 from src.a_star import AStar
 from src.environment_initializer import EnvironmentInitializer
-from itertools import islice
 import pprint
 
 class GeneticAlgorithm:
@@ -179,6 +178,7 @@ class GeneticAlgorithm:
                 print(f'Average fitness: {np.average(pop_fits)}')
 
         print("Best path of the robots --")
+        print(best)
         best_path = self.__fitness_get_all_subtours(best)
         for i in range(len(best_path)):
             pprint.pprint(f'Path of robot {i+1}: {best_path[i]}')
@@ -707,13 +707,13 @@ class GeneticAlgorithm:
     Params:
         segment: The segment of the candidate solution containing the subtour 
         robot_loc: The initial location of the robot
-        task_list: The list containing the coordinates of the tasks
 
     Returns:
         The path taken by the robot to complete the subtour, as a list of pairs.
     '''
-    def __fitness_get_subtour(self, segment, robot_loc, task_list):
+    def __fitness_get_subtour(self, segment, robot_loc):
         grid = self.env.get_grid()
+        task_list = self.env.get_task_list()
 
         # calculate subtour path taken by this robot
         astar = AStar(grid)
@@ -744,7 +744,6 @@ class GeneticAlgorithm:
     
     Params:
         chromosome: The candidate solution
-        task_list: The list containing the coordinates of the tasks
 
     Returns:
         The paths taken by every robot to complete their subtours.
@@ -753,8 +752,6 @@ class GeneticAlgorithm:
         robots = self.env.num_of_robots()
         tasks = self.env.num_of_tasks()
         robot_loc = self.env.get_robot_loc()
-        task_list = self.env.get_task_list()
-        cut_task_list = [task_list[t] for t in list(islice(task_list, tasks))]
         segment_idx = self.__get_subtour_start_indices_of(chromosome)
         all_paths = []
 
@@ -765,7 +762,7 @@ class GeneticAlgorithm:
 
             # calculate subtour path taken by this robot
             path = self.__fitness_get_subtour(
-                chromosome[start:end], robot_loc[m], cut_task_list
+                chromosome[start:end], robot_loc[m]
             )
             all_paths.append(path.copy())
 
