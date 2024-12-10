@@ -2,6 +2,7 @@ import numpy as np
 from src.a_star import AStar
 from src.environment_initializer import EnvironmentInitializer
 from itertools import islice
+import pprint
 
 class GeneticAlgorithm:
     '''
@@ -137,7 +138,7 @@ class GeneticAlgorithm:
     def run(self, generations=100, update_step=1):
         # initialization
         pop = self.__pop_init(self.pop_size)
-        pop_fits = self.__fitness_of_pop(pop)
+        pop_fits = self.__fitness_of_pop(pop, constraint=True)
         pop_fits, pop = self.__sort_pop_by_fitness(pop_fits, pop)
 
         # termination condition
@@ -159,8 +160,8 @@ class GeneticAlgorithm:
                 c2 = self.__mutation(c2) if self.pm < np.random.rand() else c2
 
                 # fitness calcs
-                c1_fit = self.__fitness(c1)
-                c2_fit = self.__fitness(c2)
+                c1_fit = self.__fitness(c1, constraint=True)
+                c2_fit = self.__fitness(c2, constraint=True)
 
                 # add children to the population
                 pop = np.append(pop, [c1, c2], axis=0)
@@ -180,7 +181,7 @@ class GeneticAlgorithm:
         print("Best path of the robots --")
         best_path = self.__fitness_get_all_subtours(best)
         for i in range(len(best_path)):
-            print(f'Path of robot {i+1}: {best_path[i]}')
+            pprint.pprint(f'Path of robot {i+1}: {best_path[i]}')
 
         return
 
@@ -642,34 +643,39 @@ class GeneticAlgorithm:
 
     '''
     Determines the fitness of the individual. 
+    Contains the constraint of collisions, which will reduce the fitness 
+        of the individual to 0.
 
     Params:
         chromosome: The candidate solution
+        constraint: The option for the fitness function to check the
+            collision constraint
 
     Returns:
         The fitness. Larger is better.
     '''
-    def __fitness(self, chromosome):
+    def __fitness(self, chromosome, constraint=False):
         method = self.objective_func
         fitness_methods = {
             'makespan'      : self.__makespan,
             'flow_time'     : self.__flow_time
         }
-        return 1 / fitness_methods[method](chromosome)
+        return 1 / fitness_methods[method](chromosome, constraint) 
 
     '''
     Determines the fitness of a given population. 
 
     Params:
         pop: The list of candidate solutions
-
+        constraint: The option for the fitness function to check the
+            collision constraint
     Returns:
         A list of the population's fitnesses. Larger is better.
     '''
-    def __fitness_of_pop(self, pop):
+    def __fitness_of_pop(self, pop, constraint=False):
         pop_fit = [0] * len(pop)
         for i in range(len(pop)):
-            pop_fit[i] = self.__fitness(pop[i])
+            pop_fit[i] = self.__fitness(pop[i], constraint)
 
         return pop_fit
 
@@ -679,18 +685,21 @@ class GeneticAlgorithm:
 
     Params:
         chromosome: The candidate solution
+        check_collisons: The option that checks for collisions in the tours
 
     Returns
         The average length of all the agents' paths.
     '''
-    def __flow_time(self, chromosome):
+    def __flow_time(self, chromosome, check_collisions=False):
         # get the length of each robot's subtour
         path_len = 0
         subtours = self.__fitness_get_all_subtours(chromosome)
         for subtour in subtours:
             path_len += len(subtour)
 
-        return path_len / len(subtours)
+        # get collisions
+        c = self.__constraint_collision(subtours) if check_collisions else 0
+        return float('inf') if c > 0 else path_len / len(subtours)
 
     '''
     Helper fitness function that calculates the path of the subtour.
@@ -759,6 +768,7 @@ class GeneticAlgorithm:
                 chromosome[start:end], robot_loc[m], cut_task_list
             )
             all_paths.append(path.copy())
+
         return all_paths
 
     '''
@@ -767,15 +777,52 @@ class GeneticAlgorithm:
 
     Params:
         chromosome: The candidate solution
+        check_collisons: The option that checks for collisions in the tours
 
     Returns:
         The longest path length out of all the agents' paths.
     '''
-    def __makespan(self, chromosome):
+    def __makespan(self, chromosome, check_collisions=False):
         # get the max length of each robot's subtour
         max_path_len = 0
         subtours = self.__fitness_get_all_subtours(chromosome)
         for subtour in subtours:
             max_path_len = max(max_path_len, len(subtour))
 
-        return max_path_len
+        # get collisions
+        c = self.__constraint_collision(subtours) if check_collisions else 0
+        return float('inf') if c > 0 else max_path_len
+
+    '''
+    Constraint to the objective function that determines if the robots collide 
+        at any point in their paths
+
+    Params:
+        tours: The paths that every robot takes.
+    Returns:
+        The number of collisions found.
+    '''
+    def __constraint_collision(self, tours):
+        collisions_detected = 0
+
+        # pad uneven tours with a default value for easier comparing
+        max_path_len = max(len(row) for row in tours)
+        padding = (-1, -1)
+        padded_tours = np.array(
+            [path + [padding] * (max_path_len - len(path)) for path in tours]
+        )
+
+        # check the location of each robot at each point in time
+        for col in range(max_path_len):
+            locations = set()
+            column = [padded_tours[row, col] for row in range(len(padded_tours))]
+            for x, y in column:
+                cell = (x, y)
+                if cell == padding:
+                    continue
+                if cell in locations:
+                    collisions_detected += 1
+                else:
+                    locations.add(cell)
+
+        return collisions_detected

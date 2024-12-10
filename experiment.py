@@ -8,7 +8,7 @@ def main():
     env = EnvironmentInitializer(robots=3, tasks=10, robot_loc=[(3, 8), (5, 3), (20, 19)])
     ga = GeneticAlgorithm(pop_size=100, pc=0.85, pm= 0.01, env=env)
     print(ga.get_params())
-    generations = 100
+    generations = 50
     update_step = generations // 10
     ga.run(generations, update_step)
 
