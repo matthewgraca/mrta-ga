@@ -217,7 +217,7 @@ class GeneticAlgorithm:
         The population, randomly generated based on the given tasks and robots.
     '''
     def __random_pop_init(self, pop_size):
-        return [self.__create_two_part_chromosome() for i in range(pop_size)]
+        return [self.__create_random_two_part_chromosome() for _ in range(pop_size)]
 
     '''
     Implements greedy population intialization, where all tasks are assigned
@@ -230,17 +230,71 @@ class GeneticAlgorithm:
         The population, greedily seeded 
     '''
     def __greedy_pop_init(self, pop_size):
-        return []
+        return [self.__create_greedy_two_part_chromosome() for _ in range(pop_size)]
+
+    '''
+    Implements the candidate solutions. Design is a two-part chromosome, where 
+        the first part contains the tours of each robot, while the second 
+        part contains the size of the tour taken by each robot.
+        
+        The tasks assigned to each robot is greedily determined. Each robot 
+            is guaranteed at least one task, and the rest of the tasks are 
+            assigned to the closest robot. Then, the subtour of each robot 
+            is shuffled.
+
+    Returns:
+        The chromosome encoding of the candidate solution.
+    '''
+    def __create_greedy_two_part_chromosome(self):
+        robots = self.env.num_of_robots()
+        robot_assignments = [[] for _ in range(robots)]
+        task_list = self.env.get_task_list()
+        robot_loc = self.env.get_robot_loc()
+        search = AStar(self.env.get_grid())
+
+        # guaranteed every robot has at least 1 task
+        for i in range(robots):
+            robot_assignments[i].append(i + 1)
+
+        # assign each task to the closest robot
+        for i in range(robots, len(task_list)):
+            src, _ = task_list[i] 
+            min_dist = float('inf')
+            robot = -1
+            # for each task, find the closest robot
+            for j in range(len(robot_loc)):
+                dest = robot_loc[j]
+                path = search.a_star_search(src, dest)
+                if len(path) < min_dist:
+                    min_dist = len(path) 
+                    robot = j # closest robot to task
+            # assign task to closest robot
+            robot_assignments[robot].append(i + 1)
+        
+        # shuffle tasks of each robot
+        assgn_len = [0] * robots
+        for i in range(robots):
+            np.random.shuffle(robot_assignments[i])
+            assgn_len[i] = len(robot_assignments[i])
+
+        # create the chromosome
+        tasks = np.concatenate(robot_assignments)
+        chromosome = np.concatenate([tasks, assgn_len], axis=0)
+
+        return chromosome
 
     '''
     Implements the candidate solutions. Design is a two-part chromosome, where 
         the first part contains the tours of each robot, while the second 
         part contains the size of the tour taken by each robot.
 
+        The perumutation of tasks and the tasks assigned to the robots are 
+            randomly determined.
+
     Returns:
         The chromosome encoding of the candidate solution.
     '''
-    def __create_two_part_chromosome(self):
+    def __create_random_two_part_chromosome(self):
         tasks, robots = self.env.num_of_tasks(), self.env.num_of_robots()
         # part 1: random permutation of tasks
         chromo1 = np.random.permutation(tasks) + 1
