@@ -71,7 +71,7 @@ class ConstructorTest(unittest.TestCase):
             'selection'     : {'rws'},
             'crossover'     : {'tcx'},
             'mutation'      : {'inverse', 'swap'},
-            'replacement'   : {'replace_worst'}
+            'replacement'   : {'replace_worst', 'elitism'}
         }  
 
         actual = GeneticAlgorithm().get_valid_params()

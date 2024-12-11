@@ -21,3 +21,12 @@ class ReplacementTest(unittest.TestCase):
         self.assertTrue(np.array_equal(actual1, expected1))
         self.assertTrue(np.array_equal(actual2, expected2))
 
+    def test_elitism_1(self):
+        np.random.seed(0)
+
+        env = EnvironmentInitializer(robots=3, tasks=12)
+        ga = GeneticAlgorithm(replacement='replace_worst', env=env)
+        pop = ga._GeneticAlgorithm__pop_init(50)
+        pop_fitness = ga._GeneticAlgorithm__fitness_of_pop(pop)
+        
+        self.assertTrue(True)

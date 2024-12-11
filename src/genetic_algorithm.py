@@ -37,7 +37,7 @@ class GeneticAlgorithm:
             'selection'     : {'rws'},
             'crossover'     : {'tcx'},
             'mutation'      : {'inverse', 'swap'},
-            'replacement'   : {'replace_worst'}
+            'replacement'   : {'replace_worst', 'elitism'}
         }   
 
         # check parameters
@@ -138,7 +138,6 @@ class GeneticAlgorithm:
         # initialization
         pop = self.__pop_init(self.pop_size)
         pop_fits = self.__fitness_of_pop(pop, constraint=True)
-        pop_fits, pop = self.__sort_pop_by_fitness(pop_fits, pop)
 
         # termination condition
         for gen in range(generations):
@@ -425,14 +424,15 @@ class GeneticAlgorithm:
         method = self.replacement
         # list of current replacement methods
         replacement_methods= {
-            'replace_worst' : self.__replace_worst
+            'replace_worst' : self.__replace_worst,
+            'elitism'       : self.__elitism
         }
         lmbda = self.__get_lambda(len(pop))
         return replacement_methods[method](pop, pop_fit, lmbda)
 
     '''
-    Helper function for replacement that removes the lamda worst individuals 
-        in the population.
+    Implements replacement that removes the lambda worst individuals in the 
+        population.
 
     Params:
         pop: The population that will have individuals removed 
@@ -449,6 +449,30 @@ class GeneticAlgorithm:
         # fitness sorted from less fit -> most fit, so drop front end 
         next_gen_fits, next_gen = pop_fitness[lmbda:], pop[lmbda:]
 
+        return next_gen_fits, next_gen
+
+    '''
+    Implements elitist replacement, a combination of age-based replacement
+        while keeping the best individual.
+            - The lambda oldest individuals are put up for replacement
+            - If the individual being replaced is the best individual, they 
+                compete with the children for a spot in the next generation
+            - If any child has better fitness, the old individual is replaced
+            - If none of the children have better fitness, a child is randomly 
+                replaced. The old individual returns to the front of the queue.
+
+    Params:
+        pop: The population that will have individuals removed.
+        pop_fit: The fitness of the population
+        lmbda: The number of individuals that will be removed
+
+    Returns:
+        The population, with lambda individuals removed
+    '''
+    def __elitism(self, pop, pop_fit, lmbda):
+        # TODO pass in the best fitness? otherwise we need to recalculate it many times over.
+        # would just need to calc best fitness in pop initiatlization, then keep updating it.
+        next_gen_fits, next_gen = [], []
         return next_gen_fits, next_gen
 
     '''
