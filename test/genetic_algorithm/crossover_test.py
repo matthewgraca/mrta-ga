@@ -12,8 +12,8 @@ class CrossoverTest(unittest.TestCase):
 
         # run 100 times for robust measure on stochastic method
         for _ in range(100):
-            p1 = ga._GeneticAlgorithm__create_two_part_chromosome()
-            p2 = ga._GeneticAlgorithm__create_two_part_chromosome()
+            p1 = ga._GeneticAlgorithm__create_random_two_part_chromosome()
+            p2 = ga._GeneticAlgorithm__create_random_two_part_chromosome()
             actual1, actual2 = ga._GeneticAlgorithm__crossover(p1, p2)
 
             # check first part is a permutation of tasks

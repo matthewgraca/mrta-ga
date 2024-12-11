@@ -12,7 +12,7 @@ class MutationTest(unittest.TestCase):
 
         # run 100 times for robust measure on stochastic method
         for _ in range(100):
-            chromo = ga._GeneticAlgorithm__create_two_part_chromosome()
+            chromo = ga._GeneticAlgorithm__create_random_two_part_chromosome()
             actual = ga._GeneticAlgorithm__mutation(chromo)
 
             # check first part is a permutation of tasks
@@ -39,3 +39,5 @@ class MutationTest(unittest.TestCase):
                 if np.array_equal(subtour_reversed, subtour_actual):
                     inverted = True
             self.assertTrue(inverted)
+
+
