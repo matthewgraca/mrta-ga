@@ -10,8 +10,8 @@ class FitnessTest(unittest.TestCase):
         chromosome = [12, 3, 4, 10, 11, 8, 5, 9, 2, 6, 1, 7, 5, 3, 4]
 
         actual = ga._GeneticAlgorithm__flow_time(chromosome)
-        expected = 256.66
-        self.assertAlmostEqual(actual, expected, delta=.1)
+        expected = 770 
+        self.assertEqual(actual, expected)
 
     def test_makespan(self):
         env = EnvironmentInitializer(robots=3, tasks=12)

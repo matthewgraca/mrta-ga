@@ -472,6 +472,16 @@ class GeneticAlgorithm:
     def __elitism(self, pop, pop_fit, lmbda):
         # TODO pass in the best fitness? otherwise we need to recalculate it many times over.
         # would just need to calc best fitness in pop initiatlization, then keep updating it.
+        '''
+        for the oldest 20 percent of pop:
+            old_indiv, old_fit = pop.popleft(), pop_fit.popleft()
+            if old_indiv == best_indiv:
+                if old_fit > best_child_fit:
+                    pop child from child pool
+                    put old into old queue
+        pop = concat old + pop + children
+                    
+        '''
         next_gen_fits, next_gen = [], []
         return next_gen_fits, next_gen
 
@@ -797,25 +807,25 @@ class GeneticAlgorithm:
 
     '''
     Helper function for fitness. An objective function that measures the 
-        average length of all the agents' paths.
+        length of all the agents' paths, aka the sum of costs.
 
     Params:
         chromosome: The candidate solution
         check_collisons: The option that checks for collisions in the tours
 
     Returns
-        The average length of all the agents' paths.
+        The length of all the agents' paths.
     '''
     def __flow_time(self, chromosome, check_collisions=False):
         # get the length of each robot's subtour
-        path_len = 0
+        tour_len = 0
         subtours = self.__fitness_get_all_subtours(chromosome)
         for subtour in subtours:
-            path_len += len(subtour)
+            tour_len += len(subtour)
 
         # get collisions
         c = self.__constraint_collision(subtours) if check_collisions else 0
-        return float('inf') if c > 0 else path_len / len(subtours)
+        return float('inf') if c > 0 else tour_len 
 
     '''
     Helper fitness function that calculates the path of the subtour.
