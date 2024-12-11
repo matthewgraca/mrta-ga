@@ -70,7 +70,7 @@ class ConstructorTest(unittest.TestCase):
             'pop_init'      : {'random', 'greedy'},
             'selection'     : {'rws'},
             'crossover'     : {'tcx'},
-            'mutation'      : {'inverse'},
+            'mutation'      : {'inverse', 'swap'},
             'replacement'   : {'replace_worst'}
         }  
 

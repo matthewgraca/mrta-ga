@@ -36,7 +36,7 @@ class GeneticAlgorithm:
             'pop_init'      : {'random', 'greedy'},
             'selection'     : {'rws'},
             'crossover'     : {'tcx'},
-            'mutation'      : {'inverse'},
+            'mutation'      : {'inverse', 'swap'},
             'replacement'   : {'replace_worst'}
         }   
 
@@ -670,7 +670,8 @@ class GeneticAlgorithm:
         method = self.mutation
         # list of current crossover methods
         mut_methods= {
-            'inverse': self.__inverse_mutation
+            'inverse'   : self.__inverse_mutation,
+            'swap'      : self.__swap_mutation
         }
         return mut_methods[method](chromosome)
 
@@ -685,19 +686,48 @@ class GeneticAlgorithm:
         The mutated chromosome
     '''
     def __inverse_mutation(self, chromosome):
+        chromo = chromosome.copy()
         tasks, robots = self.env.num_of_tasks(), self.env.num_of_robots()
+
         # pick a random agent's subtour
         agent = np.random.randint(0, robots)
-        startIdxes = self.__get_subtour_start_indices_of(chromosome)
+        startIdxes = self.__get_subtour_start_indices_of(chromo)
 
         # get their indices
         startIdx = startIdxes[agent]
-        endIdx = startIdx + chromosome[tasks + agent]
+        endIdx = startIdx + chromo[tasks + agent]
 
         # invert the subtour of that agent
-        inverted_subtour = chromosome[startIdx : endIdx][::-1]
-        chromosome[startIdx : endIdx] = inverted_subtour
+        inverted_subtour = chromo[startIdx : endIdx][::-1]
+        chromo[startIdx : endIdx] = inverted_subtour
+
         return chromosome 
+
+    '''
+    Performs swap mutation on the given chromosome. Two genes will be 
+        swapped in the first part and the second part, resulting in 
+        four swapped genes in total.
+
+    Params:
+        chromosome: The chromosome that will be mutated
+
+    Returns:
+        The mutated chromosome
+    '''
+    def __swap_mutation(self, chromosome):
+        chromo = chromosome.copy()
+        tasks, robots = self.env.num_of_tasks(), self.env.num_of_robots()
+
+        # pick two indices in the first part of the chromosome, swap contents
+        i, j = np.random.choice(tasks, 2, replace=False)
+        chromo[i], chromo[j] = chromo[j], chromo[i]
+
+        # pick two indices in the second part of the chromosome, swap contents
+        i, j = np.random.choice(robots, 2, replace=False)
+        i, j = i + tasks, j + tasks
+        chromo[i], chromo[j] = chromo[j], chromo[i]
+
+        return chromo
 
     '''
     **Fitness functions**
