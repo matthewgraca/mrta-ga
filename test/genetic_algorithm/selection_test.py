@@ -7,7 +7,7 @@ class SelectionTest(unittest.TestCase):
     def test_rws_1(self):
         np.random.seed(0)
         env = EnvironmentInitializer(robots=3, tasks=12)
-        ga = GeneticAlgorithm(pop_init='random', selection='rws', env=env)
+        ga = GeneticAlgorithm(pop_size=50, pop_init='random', selection='rws', env=env)
         pop = ga._GeneticAlgorithm__pop_init(50)
         pop_fitness = ga._GeneticAlgorithm__fitness_of_pop(pop, constraint=True)
         pop_fit, pop = ga._GeneticAlgorithm__sort_pop_by_fitness(pop_fitness, pop)

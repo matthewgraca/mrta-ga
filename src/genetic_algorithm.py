@@ -60,6 +60,8 @@ class GeneticAlgorithm:
         self.pm = pm
         self.replacement = replacement
 
+        # initialize hardcoded lambda
+        self.lmbda = self.__get_lambda(pop_size)
         # initialize environment
         self.env = env
 
@@ -155,6 +157,7 @@ class GeneticAlgorithm:
             while mating_pool:
                 # parent selection
                 p1, p2 = mating_pool.pop(), mating_pool.pop()
+                print(p1, p2)
 
                 # crossover
                 if np.random.rand() < self.pc:
@@ -179,9 +182,17 @@ class GeneticAlgorithm:
                 pop, pop_fits, children, children_fits, best_fit, best_indv
             )
 
+<<<<<<< Updated upstream
             # results (replace-worst sorts them already)
             best_indv, worst_indv = pop[-1], pop[0]
             best_fit, worst_fit = pop_fits[-1], pop_fits[0] 
+=======
+            # results
+            best_fit = np.max(pop_fits)
+            worst_fit = np.min(pop_fits)
+            best_indv = pop[np.argmax(pop_fits)]
+            worst_indv = pop[np.argmin(pop_fits)]
+>>>>>>> Stashed changes
             if (gen + 1) % update_step == 0:
                 print(f'Generation: {gen}, Best solution:  {best_indv}, Best fitness:  {best_fit}')
                 print(f'Generation: {gen}, Worst solution: {worst_indv}, Worst fitness: {worst_fit}')
@@ -189,7 +200,11 @@ class GeneticAlgorithm:
 
         print("Best path of the robots --")
         print(best_indv)
+<<<<<<< Updated upstream
         best_path = self.__fitness_get_all_subtours(best_indv)
+=======
+        best_path = self.__fitness_get_all_subtours(best)
+>>>>>>> Stashed changes
         for i in range(len(best_path)):
             pprint.pprint(f'Path of robot {i+1}: {best_path[i]}')
 
@@ -343,8 +358,7 @@ class GeneticAlgorithm:
         selection_methods= {
             'rws' : self.__roulette_wheel_selection
         }
-        mating_pool_size = self.__get_lambda(len(pop))
-        return selection_methods[method](pop, pop_fit, mating_pool_size)
+        return selection_methods[method](pop, pop_fit)
 
     '''
     Helper function for population selection and replacement that determines 
@@ -373,12 +387,11 @@ class GeneticAlgorithm:
     Params:
         pop: The population being picked from
         pop_fit: The fitnesses of the population
-        mating_pool_size: Lambda, the size of the mating pool
 
     Returns:
         The parents from the mating pool.
     '''
-    def __roulette_wheel_selection(self, pop, pop_fit, mating_pool_size):
+    def __roulette_wheel_selection(self, pop, pop_fit):
         # sort by fitness
         pop_fitness, pop = self.__sort_pop_by_fitness(pop_fit, pop)
 
@@ -387,10 +400,9 @@ class GeneticAlgorithm:
         cpd = cpd / cpd[-1]
 
         # spin wheel lambda times to get that many members for the mating pool
-        lam = mating_pool_size
         curr_member = 0
-        mating_pool = [0] * lam
-        while curr_member < lam:
+        mating_pool = [0] * self.lmbda 
+        while curr_member < self.lmbda:
             r = np.random.rand()
             i = 0
             while cpd[i] < r:
@@ -443,11 +455,15 @@ class GeneticAlgorithm:
             'replace_worst' : self.__replace_worst,
             'elitism'       : self.__elitism
         }
+<<<<<<< Updated upstream
         lmbda = self.__get_lambda(len(pop))
         return replacement_methods[method](
             pop, pop_fit, children, children_fit, lmbda, 
             best_pop_fit, best_pop_indv
         )
+=======
+        return replacement_methods[method](pop, pop_fit)
+>>>>>>> Stashed changes
 
     '''
     Implements replacement that removes the lambda worst individuals in the 
@@ -456,15 +472,19 @@ class GeneticAlgorithm:
     Params:
         pop: The population that will have individuals removed 
         pop_fit: The fitnesses of the population
+<<<<<<< Updated upstream
         children: The children from crossover 
         children_fit: The fitnesses of the children
         lmbda: The number of individuals that will be removed
         best_pop_fit: The fitness of the best individual in the population
         best_pop_indv: The chromosome of the best invidivual in the population
+=======
+>>>>>>> Stashed changes
 
     Returns:
         The population, with lambda individuals removed.
     '''
+<<<<<<< Updated upstream
     def __replace_worst(
         self, pop, pop_fit, children, children_fit, lmbda, 
         best_pop_fit=None, best_pop_indv=None # to align func def w/ elitism
@@ -473,13 +493,20 @@ class GeneticAlgorithm:
         next_gen = np.append(pop, children, axis=0)
         next_gen_fits = np.append(pop_fit, children_fit)
 
+=======
+    def __replace_worst(self, pop, pop_fit):
+>>>>>>> Stashed changes
         # sort population by fitness
         next_gen_fits, next_gen = self.__sort_pop_by_fitness(
             next_gen_fits, next_gen
         )
 
         # fitness sorted from less fit -> most fit, so drop front end 
+<<<<<<< Updated upstream
         next_gen_fits, next_gen = next_gen_fits[lmbda:], next_gen[lmbda:]
+=======
+        next_gen_fits, next_gen = pop_fitness[self.lmbda:], pop[self.lmbda:]
+>>>>>>> Stashed changes
 
         return next_gen_fits, next_gen
 
@@ -496,15 +523,19 @@ class GeneticAlgorithm:
     Params:
         pop: The population that will have individuals removed.
         pop_fit: The fitness of the population
+<<<<<<< Updated upstream
         children: The children from crossover 
         children_fit: The fitnesses of the children
         lmbda: The number of individuals that will be removed
         best_pop_fit: The fitness of the best individual in the population
         best_pop_indv: The chromosome of the best invidivual in the population
+=======
+>>>>>>> Stashed changes
 
     Returns:
         The population, with lambda individuals removed
     '''
+<<<<<<< Updated upstream
     def __elitism(
         self, pop, pop_fit, children, children_fit, lmbda, 
         best_pop_fit, best_pop_indv
@@ -539,6 +570,11 @@ class GeneticAlgorithm:
             next_gen_fit = np.append(pop_fit_queue, children_fit)
 
         return next_gen_fit, next_gen
+=======
+    def __elitism(self, pop, pop_fit):
+        next_gen_fits, next_gen = [], []
+        return next_gen_fits, next_gen
+>>>>>>> Stashed changes
 
     '''
     **Crossover functions**

@@ -8,8 +8,12 @@ class ReplacementTest(unittest.TestCase):
         np.random.seed(0)
 
         env = EnvironmentInitializer(robots=3, tasks=12)
+<<<<<<< Updated upstream
         ga = GeneticAlgorithm(replacement='replace_worst', env=env)
 
+=======
+        ga = GeneticAlgorithm(pop_size=50, replacement='replace_worst', env=env)
+>>>>>>> Stashed changes
         pop = ga._GeneticAlgorithm__pop_init(50)
         pop_fitness = ga._GeneticAlgorithm__fitness_of_pop(pop)
 

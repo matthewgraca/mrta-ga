@@ -20,7 +20,7 @@ def main():
 
     # experiment -- greedy seeding
     ga = GeneticAlgorithm(
-        pop_size=100, pop_init='greedy', 
+        pop_size=100, pop_init='random', 
         mutation='swap', pc=0.85, pm= 0.01, 
         env=env
     )
