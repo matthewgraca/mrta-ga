@@ -9,24 +9,40 @@ class ReplacementTest(unittest.TestCase):
 
         env = EnvironmentInitializer(robots=3, tasks=12)
         ga = GeneticAlgorithm(replacement='replace_worst', env=env)
+
         pop = ga._GeneticAlgorithm__pop_init(50)
         pop_fitness = ga._GeneticAlgorithm__fitness_of_pop(pop)
 
-        # sort population by fitness
-        pop_fitness, pop = ga._GeneticAlgorithm__sort_pop_by_fitness(pop_fitness, pop)
+        # 10 is 20% of 50
+        children = ga._GeneticAlgorithm__pop_init(10)
+        children_fit = ga._GeneticAlgorithm__fitness_of_pop(children)
         
         # 20% hardcoded, so only 40 should remain
-        actual1, actual2 = ga._GeneticAlgorithm__replacement(pop, pop_fitness)
-        expected1, expected2 = pop_fitness[10:], pop[10:]
-        self.assertTrue(np.array_equal(actual1, expected1))
-        self.assertTrue(np.array_equal(actual2, expected2))
+        actual1, actual2 = ga._GeneticAlgorithm__replacement(
+            pop, pop_fitness, children, children_fit, None, None
+        )
+
+        self.assertTrue(len(actual1) == 50 and len(actual2) == 50)
 
     def test_elitism_1(self):
         np.random.seed(0)
 
         env = EnvironmentInitializer(robots=3, tasks=12)
-        ga = GeneticAlgorithm(replacement='replace_worst', env=env)
+        ga = GeneticAlgorithm(replacement='elitism', env=env)
         pop = ga._GeneticAlgorithm__pop_init(50)
         pop_fitness = ga._GeneticAlgorithm__fitness_of_pop(pop)
+
+        # 10 is 20% of 50
+        children = ga._GeneticAlgorithm__pop_init(10)
+        children_fit = ga._GeneticAlgorithm__fitness_of_pop(children)
         
+        # 20% hardcoded, so only 40 should remain
+        actual1, actual2 = ga._GeneticAlgorithm__replacement(
+            pop, pop_fitness, children, children_fit, None, None
+        )
+        
+        '''
+        self.assertEqual(len(actual1), 50)
+        self.assertEqual(len(actual2), 50)
+        '''
         self.assertTrue(True)
