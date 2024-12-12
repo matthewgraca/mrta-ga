@@ -18,33 +18,5 @@ def main():
     print(ga.get_params())
     ga.run(generations, update_step)
 
-    # experiment -- greedy seeding
-    ga = GeneticAlgorithm(
-        pop_size=100, pop_init='random', 
-        mutation='swap', pc=0.85, pm= 0.01, 
-        env=env
-    )
-    print(ga.get_params())
-    ga.run(generations, update_step)
-
-    # experiment -- inverse mutation
-    ga = GeneticAlgorithm(
-        pop_size=100, pop_init='greedy', 
-        mutation='inverse', pc=0.85, pm= 0.01, 
-        env=env
-    )
-    print(ga.get_params())
-    ga.run(generations, update_step)
-
-    # experiment -- makespan w/ swap
-    ga = GeneticAlgorithm(
-        objective_func='makespan',
-        pop_size=100, pop_init='greedy', 
-        mutation='swap', pc=0.85, pm= 0.01, 
-        env=env
-    )
-    print(ga.get_params())
-    ga.run(generations, update_step)
-
 if __name__=='__main__':
     main()

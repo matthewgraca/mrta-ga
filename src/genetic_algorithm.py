@@ -157,7 +157,6 @@ class GeneticAlgorithm:
             while mating_pool:
                 # parent selection
                 p1, p2 = mating_pool.pop(), mating_pool.pop()
-                print(p1, p2)
 
                 # crossover
                 if np.random.rand() < self.pc:
@@ -174,25 +173,17 @@ class GeneticAlgorithm:
                 c2_fit = self.__fitness(c2, constraint=True)
 
                 # add children to the child pool
-                children.extend([c1, c2])
-                children_fits.extend([c1_fit, c2_fit])
+                pop = np.append(pop, [c1, c2], axis=0)
+                pop_fits = np.append(pop_fits, [c1_fit, c2_fit])
 
             # replacement
-            pop_fits, pop = self.__replacement(
-                pop, pop_fits, children, children_fits, best_fit, best_indv
-            )
+            pop_fits, pop = self.__replacement(pop, pop_fits)
 
-<<<<<<< Updated upstream
-            # results (replace-worst sorts them already)
-            best_indv, worst_indv = pop[-1], pop[0]
-            best_fit, worst_fit = pop_fits[-1], pop_fits[0] 
-=======
             # results
             best_fit = np.max(pop_fits)
             worst_fit = np.min(pop_fits)
             best_indv = pop[np.argmax(pop_fits)]
             worst_indv = pop[np.argmin(pop_fits)]
->>>>>>> Stashed changes
             if (gen + 1) % update_step == 0:
                 print(f'Generation: {gen}, Best solution:  {best_indv}, Best fitness:  {best_fit}')
                 print(f'Generation: {gen}, Worst solution: {worst_indv}, Worst fitness: {worst_fit}')
@@ -200,11 +191,7 @@ class GeneticAlgorithm:
 
         print("Best path of the robots --")
         print(best_indv)
-<<<<<<< Updated upstream
         best_path = self.__fitness_get_all_subtours(best_indv)
-=======
-        best_path = self.__fitness_get_all_subtours(best)
->>>>>>> Stashed changes
         for i in range(len(best_path)):
             pprint.pprint(f'Path of robot {i+1}: {best_path[i]}')
 
@@ -438,32 +425,18 @@ class GeneticAlgorithm:
     Params:
         pop: The population that will be culled.
         pop_fit: The fitnesses of the population
-        children: The children from crossover 
-        children_fit: The fitnesses of the children
-        best_pop_fit: The fitness of the best individual in the population
-        best_indv: The chromosome of the best invidivual in the population
 
     Returns:
         The population, with lambda individuals removed
     '''
-    def __replacement(
-        self, pop, pop_fit, children, children_fit, best_pop_fit, best_pop_indv
-    ):
+    def __replacement(self, pop, pop_fit):
         method = self.replacement
         # list of current replacement methods
         replacement_methods= {
             'replace_worst' : self.__replace_worst,
             'elitism'       : self.__elitism
         }
-<<<<<<< Updated upstream
-        lmbda = self.__get_lambda(len(pop))
-        return replacement_methods[method](
-            pop, pop_fit, children, children_fit, lmbda, 
-            best_pop_fit, best_pop_indv
-        )
-=======
         return replacement_methods[method](pop, pop_fit)
->>>>>>> Stashed changes
 
     '''
     Implements replacement that removes the lambda worst individuals in the 
@@ -472,41 +445,16 @@ class GeneticAlgorithm:
     Params:
         pop: The population that will have individuals removed 
         pop_fit: The fitnesses of the population
-<<<<<<< Updated upstream
-        children: The children from crossover 
-        children_fit: The fitnesses of the children
-        lmbda: The number of individuals that will be removed
-        best_pop_fit: The fitness of the best individual in the population
-        best_pop_indv: The chromosome of the best invidivual in the population
-=======
->>>>>>> Stashed changes
 
     Returns:
         The population, with lambda individuals removed.
     '''
-<<<<<<< Updated upstream
-    def __replace_worst(
-        self, pop, pop_fit, children, children_fit, lmbda, 
-        best_pop_fit=None, best_pop_indv=None # to align func def w/ elitism
-    ):
-        # add children to the population
-        next_gen = np.append(pop, children, axis=0)
-        next_gen_fits = np.append(pop_fit, children_fit)
-
-=======
     def __replace_worst(self, pop, pop_fit):
->>>>>>> Stashed changes
         # sort population by fitness
-        next_gen_fits, next_gen = self.__sort_pop_by_fitness(
-            next_gen_fits, next_gen
-        )
+        pop_fitness, pop = self.__sort_pop_by_fitness(pop_fit, pop)
 
         # fitness sorted from less fit -> most fit, so drop front end 
-<<<<<<< Updated upstream
-        next_gen_fits, next_gen = next_gen_fits[lmbda:], next_gen[lmbda:]
-=======
         next_gen_fits, next_gen = pop_fitness[self.lmbda:], pop[self.lmbda:]
->>>>>>> Stashed changes
 
         return next_gen_fits, next_gen
 
@@ -523,58 +471,13 @@ class GeneticAlgorithm:
     Params:
         pop: The population that will have individuals removed.
         pop_fit: The fitness of the population
-<<<<<<< Updated upstream
-        children: The children from crossover 
-        children_fit: The fitnesses of the children
-        lmbda: The number of individuals that will be removed
-        best_pop_fit: The fitness of the best individual in the population
-        best_pop_indv: The chromosome of the best invidivual in the population
-=======
->>>>>>> Stashed changes
 
     Returns:
         The population, with lambda individuals removed
     '''
-<<<<<<< Updated upstream
-    def __elitism(
-        self, pop, pop_fit, children, children_fit, lmbda, 
-        best_pop_fit, best_pop_indv
-    ):
-        # TODO pass in the best fitness? otherwise we need to recalculate it many times over.
-        # would just need to calc best fitness in pop initiatlization, then keep updating it.
-        # get best child and their fitness
-        children_fit, children = self.__sort_pop_by_fitness(children_fit, children)
-        best_child_fit, best_child = children_fit[-1], children[-1]
-
-        # check if the old should be removed
-        # TODO WE are popping the best -- we should be popping randomly
-        pop_queue, pop_fit_queue = deque(pop), deque(pop_fit)
-        old_lives, old_lives_fit = [], 0
-        for i in range(lmbda):
-            old_indv, old_fit = pop_queue.popleft(), pop_fit_queue.popleft()
-            if old_fit == best_pop_fit:
-                if old_fit > best_child_fit:
-                    # save old guy
-                    old_lives, old_lives_fit = old_indv, old_fit
-
-                    # remove a child from the next gen
-                    children.pop()
-                    children_fit.pop()
-
-        # combine individuals going to next generation
-        if old_lives:
-            next_gen = np.append(old_lives, pop_queue, children, axis=0)
-            next_gen_fit = np.append(old_lives_fit, pop_fit, children_fit)
-        else:
-            next_gen = np.append(pop, children, axis=0)
-            next_gen_fit = np.append(pop_fit_queue, children_fit)
-
-        return next_gen_fit, next_gen
-=======
     def __elitism(self, pop, pop_fit):
         next_gen_fits, next_gen = [], []
         return next_gen_fits, next_gen
->>>>>>> Stashed changes
 
     '''
     **Crossover functions**
