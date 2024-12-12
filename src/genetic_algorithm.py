@@ -143,17 +143,18 @@ class GeneticAlgorithm:
         pop_fits = self.__fitness_of_pop(pop, constraint=True)
 
         # examine population
-        pop_fits, pop = self.__sort_pop_by_fitness(pop_fits, pop)
-        best_indv, worst_indv = pop[-1], pop[0]
-        best_fit, worst_fit = pop_fits[-1], pop_fits[0] 
+        best_fit = np.max(pop_fits)
+        worst_fit = np.min(pop_fits)
+        best_indv = pop[np.argmax(pop_fits)]
+        worst_indv = pop[np.argmin(pop_fits)]
         print(f'Generation: 0, Best solution:  {best_indv}, Best fitness:  {best_fit}')
         print(f'Generation: 0, Worst solution: {worst_indv}, Worst fitness: {worst_fit}')
         print(f'Average fitness: {np.average(pop_fits)}')
-        # termination condition
+
+        # main evolutionary loop, run for the defined generations 
         for gen in range(generations):
             # select a mating pool from the population
             mating_pool = self.__selection(pop, pop_fits)
-            children, children_fits = [], []
             while mating_pool:
                 # parent selection
                 p1, p2 = mating_pool.pop(), mating_pool.pop()
@@ -476,7 +477,35 @@ class GeneticAlgorithm:
         The population, with lambda individuals removed
     '''
     def __elitism(self, pop, pop_fit):
-        next_gen_fits, next_gen = [], []
+        # convert pop to deque
+        pop_fit_deque, pop_deque = deque(pop_fit), deque(pop)
+
+        # find the max fit of the pop and its index
+        best_fit_idx = np.argmax(pop_fit)
+        best_fit, best_indv = np.max(pop_fit), pop[best_fit_idx]
+
+        # if the max fit is set to be replaced...
+        if best_fit_idx < self.lmbda:
+            # ... replace a child instead (end of queue), 
+            pop_fit_deque.pop()
+            pop_deque.pop()
+
+            # pop the first lambda individuals (front of queue),
+            for i in range(self.lmbda):
+                pop_fit_deque.popleft()
+                pop_deque.popleft()
+
+            # and put the individual back in the front of the queue
+            pop_fit_deque.appendleft(best_fit)
+            pop_deque.appendleft(best_indv)
+        else:
+            # otherwise, just pop the first lambda individuals
+            for i in range(self.lmbda):
+                pop_fit_deque.popleft()
+                pop_deque.popleft()
+
+        next_gen_fits, next_gen = np.array(pop_fit_deque), np.array(pop_deque)
+
         return next_gen_fits, next_gen
 
     '''

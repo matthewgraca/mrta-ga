@@ -18,5 +18,16 @@ def main():
     print(ga.get_params())
     ga.run(generations, update_step)
 
+    # experiment -- with elitism 
+    ga = GeneticAlgorithm(
+        pop_size=100, pop_init='random', 
+        replacement='elitism',
+        mutation='swap', pc=0.85, pm= 0.01, 
+        env=env
+    )
+    print(ga.get_params())
+    ga.run(generations, update_step)
+
+
 if __name__=='__main__':
     main()
