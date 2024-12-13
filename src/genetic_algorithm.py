@@ -1,7 +1,6 @@
 import numpy as np
 from src.a_star import AStar
 from src.environment_initializer import EnvironmentInitializer
-import pprint
 from collections import deque
 
 class GeneticAlgorithm:
@@ -29,6 +28,7 @@ class GeneticAlgorithm:
             pc=0.4, 
             pm=0.6,
             replacement='replace_worst',
+            replace_percent=0.2,
             env=None
     ):
         # dictionary of valid parameters
@@ -61,7 +61,7 @@ class GeneticAlgorithm:
         self.replacement = replacement
 
         # initialize hardcoded lambda
-        self.lmbda = self.__get_lambda(pop_size)
+        self.lmbda = self.__get_lambda(pop_size, replace_percent)
         # initialize environment
         self.env = env
 
@@ -138,11 +138,15 @@ class GeneticAlgorithm:
         update_step: The number of generations before each update
     '''
     def run(self, generations=100, update_step=1):
+        # data
+        avg_fit_per_gen, best_fit_per_gen = [], []
+
         # initialization
         pop = self.__pop_init(self.pop_size)
         pop_fits = self.__fitness_of_pop(pop, constraint=True)
 
         # examine population
+        '''
         best_fit = np.max(pop_fits)
         worst_fit = np.min(pop_fits)
         best_indv = pop[np.argmax(pop_fits)]
@@ -150,6 +154,7 @@ class GeneticAlgorithm:
         print(f'Generation: 0, Best solution:  {best_indv}, Best fitness:  {best_fit}')
         print(f'Generation: 0, Worst solution: {worst_indv}, Worst fitness: {worst_fit}')
         print(f'Average fitness: {np.average(pop_fits)}')
+        '''
 
         # main evolutionary loop, run for the defined generations 
         for gen in range(generations):
@@ -185,18 +190,26 @@ class GeneticAlgorithm:
             worst_fit = np.min(pop_fits)
             best_indv = pop[np.argmax(pop_fits)]
             worst_indv = pop[np.argmin(pop_fits)]
+            '''
             if (gen + 1) % update_step == 0:
                 print(f'Generation: {gen}, Best solution:  {best_indv}, Best fitness:  {best_fit}')
                 print(f'Generation: {gen}, Worst solution: {worst_indv}, Worst fitness: {worst_fit}')
                 print(f'Average fitness: {np.average(pop_fits)}')
+            '''
 
+            # save results
+            avg_fit_per_gen.append(np.average(pop_fits))
+            best_fit_per_gen.append(best_fit)
+
+        best_path = self.__fitness_get_all_subtours(best_indv)
+        '''
         print("Best path of the robots --")
         print(best_indv)
-        best_path = self.__fitness_get_all_subtours(best_indv)
         for i in range(len(best_path)):
-            pprint.pprint(f'Path of robot {i+1}: {best_path[i]}')
+            print(f'Path of robot {i+1}: {best_path[i]}')
+        '''
 
-        return
+        return avg_fit_per_gen, best_fit_per_gen, best_path
 
     '''
     **Population initialization functions**
@@ -363,7 +376,7 @@ class GeneticAlgorithm:
         The number of individuals that will be selected for selection or 
             replacement.
     '''
-    def __get_lambda(self, pop_size, mating_pool_prop=0.2):
+    def __get_lambda(self, pop_size, mating_pool_prop):
         a = int(pop_size * mating_pool_prop)
         b = a if a % 2 == 0 else a - 1  # ensure even to pair all parents
         c = b if b >= 2 else 2          # ensure there are at least 2 parents
@@ -480,7 +493,7 @@ class GeneticAlgorithm:
         # convert pop to deque
         pop_fit_deque, pop_deque = deque(pop_fit), deque(pop)
 
-        # find the max fit of the pop and its index
+        # find the max fit of the pop and its index -- including children
         best_fit_idx = np.argmax(pop_fit)
         best_fit, best_indv = np.max(pop_fit), pop[best_fit_idx]
 
